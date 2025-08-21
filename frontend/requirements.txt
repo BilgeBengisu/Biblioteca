@@ -1,0 +1,2 @@
+npm install react-router-dom --save
+npm install vite-plugin-react --save-dev
