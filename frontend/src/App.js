@@ -10,18 +10,16 @@ import ResetPasswordConfirm from './containers/ResetPasswordConfirm';
 
 import Layout from './hocs/Layout';
 
-console.log({ Home, Login, Signup, Activate, ResetPassword, ResetPasswordConfirm, Layout });
-
 const App = () => (
   <Router>
     <Layout>
       <Routes>
-        <Route exact path='/' component={Home} />
-        <Route exact path='/login' component={Login} />
-        <Route exact path='/signup' component={Signup} />
-        <Route exact path='/activate/:uid/:token' component={Activate} />
-        <Route exact path='/reset-password' component={ResetPassword} />
-        <Route exact path='/password/reset/confirm/:uid/:token' component={ResetPasswordConfirm} />
+        <Route exact path='/' element={<Home />} />
+        <Route exact path='/login' element={<Login />} />
+        <Route exact path='/signup' element={<Signup />} />
+        <Route exact path='/activate/:uid/:token' element={<Activate />} />
+        <Route exact path='/reset-password' element={<ResetPassword />} />
+        <Route exact path='/password/reset/confirm/:uid/:token' element={<ResetPasswordConfirm />} />
       </Routes>
     </Layout>
   </Router>
