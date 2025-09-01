@@ -33,6 +33,10 @@ export const check_authenticated = () => async dispatch => {
                     type: AUTHENTICATED_FAIL
                 });
             }
+        } catch (err) {
+            dispatch({
+                type: AUTHENTICATED_FAIL
+            });
         }
     } else {
         dispatch({

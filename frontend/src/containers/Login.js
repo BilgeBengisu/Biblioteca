@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Link, Redirect } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { login } from '../actions/auth';
 
-const Login = ({logini isAuthenticated}) => {
+const Login = ({login, isAuthenticated}) => {
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -20,8 +20,9 @@ const Login = ({logini isAuthenticated}) => {
         login(email, password);
     }
 
-    // is the user authenticated?
-    // redirect them to the home page
+    if (isAuthenticated) {
+        return <Navigate to='/' />
+    }
 
     return (
         <div className="container mt-5">
