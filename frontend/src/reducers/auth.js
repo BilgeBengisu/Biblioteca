@@ -3,7 +3,10 @@ import {
     LOGIN_SUCCESS, 
     LOGIN_FAIL, 
     USER_LOADED_SUCCESS, 
-    USER_LOADED_FAIL
+    USER_LOADED_FAIL,
+    AUTHENTICATED_SUCCESS,
+    AUTHENTICATED_FAIL,
+    LOGOUT
 } from '../actions/types';
 
 // Initial state for the auth slice of our Redux store
@@ -23,6 +26,11 @@ export default function authReducer(state = initialState, action) {
     // Switch statement to handle different action types
     // Each case represents a different "event" that can happen in the app
     switch(type) {
+        case AUTHENTICATED_SUCCESS:
+            return {
+                ...state,
+                isAuthenticated: true
+            }
         case LOGIN_SUCCESS:
             // When login is successful:
             // 1. Store the new tokens in localStorage for persistence across browser sessions
@@ -51,7 +59,11 @@ export default function authReducer(state = initialState, action) {
                 isAuthenticated: false,            
                 user: null                         // Clear any user data
             } 
-            
+        case AUTHENTICATED_FAIL:
+            return {
+                ...state,
+                isAuthenticated: false
+            }
         case USER_LOADED_SUCCESS:
             // When user data is successfully loaded (e.g., on app startup to check if user is still logged in)
             // This case is incomplete - you'll need to implement it based on your needs
@@ -65,7 +77,16 @@ export default function authReducer(state = initialState, action) {
             return {
                 // TODO: 
             }
-            
+        case LOGOUT:
+            localStorage.removeItem('access');
+            localStorage.removeItem('refresh');
+            return {
+                ...state,
+                access: null,
+                refresh: null,
+                isAuthenticated: false,
+                user: null
+        } 
         default:
             // If the action type doesn't match any of our cases, return the current state unchanged
             // This is important - reducers must always return a state object
