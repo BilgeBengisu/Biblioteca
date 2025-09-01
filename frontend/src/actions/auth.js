@@ -155,6 +155,7 @@ export const reset_password_confirm = (uid, token, new_password, re_new_password
             type: PASSWORD_RESET_CONFIRM_SUCCESS
         });
     } catch (err) {
+        console.log(err)
         dispatch({
             type: PASSWORD_RESET_CONFIRM_FAIL
         });
