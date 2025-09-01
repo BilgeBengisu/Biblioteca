@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useParams} from 'react-router-dom';
 import { connect } from 'react-redux';
 import { reset_password_confirm } from '../actions/auth';
 
@@ -14,16 +14,16 @@ const ResetPasswordConfirm = ({match, reset_password_confirm}) => {
     
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const onSubmit = e => {
-        e.preventDefault();
-        console.log('reset password confirm sent');
+    const { uid, token } = useParams();   // replaces match.params from react v5
 
-        const uid = match.params.uid;
-        const token = match.params.token;
+    const onSubmit = (e) => {
+        e.preventDefault();
+        console.log("reset password confirm sent");
 
         reset_password_confirm(uid, token, new_password, re_new_password);
-        setRequestSent(true);
-    }
+            setRequestSent(true);
+    };
+
 
     if (requestSent) {
         return <Navigate to='/' />
