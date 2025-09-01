@@ -6,7 +6,11 @@ import {
     USER_LOADED_FAIL,
     AUTHENTICATED_SUCCESS,
     AUTHENTICATED_FAIL,
-    LOGOUT
+    LOGOUT,
+    PASSWORD_RESET_FAIL,
+    PASSWORD_RESET_SUCCESS,
+    PASSWORD_RESET_CONFIRM_SUCCESS,
+    PASSWORD_RESET_CONFIRM_FAIL,
 } from '../actions/types';
 
 // Initial state for the auth slice of our Redux store
@@ -87,6 +91,15 @@ export default function authReducer(state = initialState, action) {
                 isAuthenticated: false,
                 user: null
         } 
+
+        // these cases are for password reset actions, currently they do not modify the state
+        case PASSWORD_RESET_SUCCESS:
+        case PASSWORD_RESET_FAIL:
+        case PASSWORD_RESET_CONFIRM_SUCCESS:
+        case PASSWORD_RESET_CONFIRM_FAIL:
+            return {
+                ...state
+            }
         default:
             // If the action type doesn't match any of our cases, return the current state unchanged
             // This is important - reducers must always return a state object
