@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import {
-    LOGIN_SUCCESS, LOGIN_FAIL, LOAD_USER_SUCCESS, LOAD_USER_FAIL
+    LOGIN_SUCCESS, LOGIN_FAIL, USER_LOADED_SUCCESS, USER_LOADED_FAIL
 } from './types';
 
 export const load_user = () => async dispatch => {
@@ -15,7 +15,7 @@ export const load_user = () => async dispatch => {
         };
 
         try {
-            const res = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/me/`, config);
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/auth/users/me`, config);
 
             dispatch({
                 type: USER_LOADED_SUCCESS,
@@ -34,17 +34,25 @@ export const load_user = () => async dispatch => {
 };
 
 export const login = (email, password) => async dispatch => {
+    console.log('🔐 Login attempt for:', email);
+    console.log('🌐 Using hardcoded API URL:', process.env.REACT_APP_API_URL);
+    
     const config = {
         headers: {
             'Content-Type': 'application/json'
         }
     }
 
-    const body = JSON.stringify[{ email, password }];
+    const body = JSON.stringify({ email, password });
+    console.log('📤 Request body:', body);
 
     try{
-        const res = await axios.post('${process.env.REACT_APP_API_URL}/auth/jwt/create/', body, config);
+        const url = `${process.env.REACT_APP_API_URL}/auth/jwt/create`;
+        console.log('🌐 Making POST request to:', url);
+        
+        const res = await axios.post(url, body, config);
 
+        console.log('✅ Login successful! Response:', res.data);
         dispatch ({
             type: LOGIN_SUCCESS,
             payload: res.data
@@ -52,6 +60,11 @@ export const login = (email, password) => async dispatch => {
 
         dispatch(load_user());
     } catch (err) {
+        console.error('❌ Login failed!');
+        console.error('Error details:', err.response?.data || err.message);
+        console.error('Status code:', err.response?.status);
+        console.error('Full error:', err);
+        
         dispatch ({
             type: LOGIN_FAIL
         });

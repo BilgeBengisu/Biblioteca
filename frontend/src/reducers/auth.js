@@ -16,7 +16,7 @@ const initialState = {
 
 // The reducer function - this is a PURE FUNCTION that takes current state and an action, returns new state
 // Redux calls this function every time an action is dispatched
-export default function(state = initialState, action) {
+export default function authReducer(state = initialState, action) {
     // Destructure the action object to get the type and payload
     const { type, payload } = action;
 
@@ -27,7 +27,6 @@ export default function(state = initialState, action) {
             // When login is successful:
             // 1. Store the new tokens in localStorage for persistence across browser sessions
             localStorage.setItem('access', payload.access)
-            localStorage.setItem('refresh', payload.refresh)
             
             // 2. Return NEW state object (never modify existing state directly!)
             // Use spread operator (...) to copy existing state, then override specific properties
