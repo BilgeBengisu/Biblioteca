@@ -3,6 +3,10 @@ import axios from 'axios';
 import {
     LOGIN_SUCCESS,
     LOGIN_FAIL,
+    SIGNUP_SUCCESS,
+    SIGNUP_FAIL,
+    ACTIVATION_SUCCESS,
+    ACTIVATION_FAIL,
     USER_LOADED_SUCCESS,
     USER_LOADED_FAIL,
     AUTHENTICATED_SUCCESS,
@@ -117,6 +121,65 @@ export const login = (email, password) => async dispatch => {
         });
     }
 };
+
+export const signup = (name, email, password, re_password) => async dispatch => {
+    const config = {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }
+
+    const body = JSON.stringify({ name, email, password, re_password});
+
+    try{
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/users/`, body, config);
+
+        console.log('✅ Login successful! Response:', res.data);
+        dispatch ({
+            type: SIGNUP_SUCCESS,
+            payload: res.data
+        });
+
+        dispatch(load_user());
+    } catch (err) {
+        console.error('❌ Login failed!');
+        console.error('Error details:', err.response?.data || err.message);
+        console.error('Status code:', err.response?.status);
+        console.error('Full error:', err);
+        
+        dispatch ({
+            type: SIGNUP_FAIL
+        });
+    }
+}
+
+export const verify = (uid, token) => async dispatch => {
+    const config = {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }
+
+    const body = JSON.stringify({ uid, token });
+
+    try{
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/users/activation/`, body, config);
+
+        console.log('✅ Login successful! Response:', res.data);
+        dispatch ({
+            type: ACTIVATION_SUCCESS,
+        });
+    } catch (err) {
+        console.error('❌ Login failed!');
+        console.error('Error details:', err.response?.data || err.message);
+        console.error('Status code:', err.response?.status);
+        console.error('Full error:', err);
+        
+        dispatch ({
+            type: ACTIVATION_FAIL
+        });
+    }
+}
 
 // only need to pass in email from djoser documentation
 export const reset_password = (email) => async dispatch => {

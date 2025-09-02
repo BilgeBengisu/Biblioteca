@@ -4,6 +4,10 @@ import {
     LOGIN_FAIL, 
     USER_LOADED_SUCCESS, 
     USER_LOADED_FAIL,
+    SIGNUP_SUCCESS,
+    SIGNUP_FAIL,
+    ACTIVATION_SUCCESS,
+    ACTIVATION_FAIL,
     AUTHENTICATED_SUCCESS,
     AUTHENTICATED_FAIL,
     LOGOUT,
@@ -48,7 +52,31 @@ export default function authReducer(state = initialState, action) {
                 access: payload.access,            // Store the new access token
                 refresh: payload.refresh           // Store the new refresh token
             }
+        case SIGNUP_SUCCESS:
+            return {
+                ...state,
+                isAuthenticated: false
+            } 
             
+        case AUTHENTICATED_FAIL:
+            return {
+                ...state,
+                isAuthenticated: false
+            }
+        case USER_LOADED_SUCCESS:
+            return {
+                ...state,
+                user: payload
+            }
+            
+        case USER_LOADED_FAIL:
+            return {
+                ...state,
+                user:null 
+            }
+        
+        case SIGNUP_FAIL:
+        case LOGOUT:
         case LOGIN_FAIL:
             // When login fails:
             // 1. Clean up any existing tokens from localStorage
@@ -63,40 +91,13 @@ export default function authReducer(state = initialState, action) {
                 isAuthenticated: false,            
                 user: null                         // Clear any user data
             } 
-        case AUTHENTICATED_FAIL:
-            return {
-                ...state,
-                isAuthenticated: false
-            }
-        case USER_LOADED_SUCCESS:
-            // When user data is successfully loaded (e.g., on app startup to check if user is still logged in)
-            // This case is incomplete - you'll need to implement it based on your needs
-            return {
-                // TODO: 
-            }
-            
-        case USER_LOADED_FAIL:
-            // When user data fails to load (e.g., token expired, invalid token)
-            // This case is incomplete - you'll need to implement it based on your needs
-            return {
-                // TODO: 
-            }
-        case LOGOUT:
-            localStorage.removeItem('access');
-            localStorage.removeItem('refresh');
-            return {
-                ...state,
-                access: null,
-                refresh: null,
-                isAuthenticated: false,
-                user: null
-        } 
-
         // these cases are for password reset actions, currently they do not modify the state
         case PASSWORD_RESET_SUCCESS:
         case PASSWORD_RESET_FAIL:
         case PASSWORD_RESET_CONFIRM_SUCCESS:
         case PASSWORD_RESET_CONFIRM_FAIL:
+        case ACTIVATION_SUCCESS:
+        case ACTIVATION_FAIL:
             return {
                 ...state
             }
