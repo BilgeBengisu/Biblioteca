@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { signup } from '../actions/auth';
+import axios from 'axios';
 
 const Signup = ({signup, isAuthenticated}) => {
     const [accountCreated, setAccountCreated] =useState(false);
@@ -25,6 +26,16 @@ const Signup = ({signup, isAuthenticated}) => {
             setAccountCreated(true);
         }
     };
+
+    const continueWithGoogle = async () => {
+        try {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/auth/o/google-oauth2/?redirect_uri=http://localhost:8000`)
+            
+            window.location.replace(res.data.authorization_url)
+        } catch (err) {
+            
+        }
+    }
 
     if (isAuthenticated) {
         return <Navigate to='/' />
@@ -87,6 +98,9 @@ const Signup = ({signup, isAuthenticated}) => {
                 </div>
                 <button className="btn btn-primary" type="submit">Registrar</button>
             </form>
+            <button className='btn btn-primary' type='submit' onClick={continueWithGoogle}>
+                Continue with Google
+            </button>
             <p className="mt-2">
                 Ya tenes una cuenta? <Link to="/login">Entrar</Link>
             </p>

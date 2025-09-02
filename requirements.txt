@@ -13,3 +13,5 @@ redux-thunk
 react-router-dom
 @reduxjs/toolkit
 axios
+social-auth-app-django
+query-string

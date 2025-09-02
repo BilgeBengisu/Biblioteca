@@ -1,10 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 const Home = () => (
     <div className='container'>
         < div className='jumbotron mt-5'>
-        
             <h1 className='display-4'>Bienvenido a Biblioteca</h1>
             <p className='lead'>Tu sistema de gestión de biblioteca todo en uno.</p>
             <hr className='my-4' />

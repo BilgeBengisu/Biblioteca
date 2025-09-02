@@ -15,6 +15,8 @@ import {
     PASSWORD_RESET_SUCCESS,
     PASSWORD_RESET_CONFIRM_SUCCESS,
     PASSWORD_RESET_CONFIRM_FAIL,
+    GOOGLE_AUTH_SUCCESS,
+    GOOGLE_AUTH_FAIL,
 } from '../actions/types';
 
 // Initial state for the auth slice of our Redux store
@@ -74,6 +76,16 @@ export default function authReducer(state = initialState, action) {
                 ...state,
                 user:null 
             }
+
+                case GOOGLE_AUTH_SUCCESS:
+            localStorage.setItem('access', payload.access);
+
+            return {
+                ...state,
+                isAuthenticated: true,
+                access: payload.access,
+                refresh: payload.refresh
+            }
         
         case SIGNUP_FAIL:
         case LOGOUT:
@@ -92,6 +104,8 @@ export default function authReducer(state = initialState, action) {
                 user: null                         // Clear any user data
             } 
         // these cases are for password reset actions, currently they do not modify the state
+
+        case GOOGLE_AUTH_FAIL:
         case PASSWORD_RESET_SUCCESS:
         case PASSWORD_RESET_FAIL:
         case PASSWORD_RESET_CONFIRM_SUCCESS:
