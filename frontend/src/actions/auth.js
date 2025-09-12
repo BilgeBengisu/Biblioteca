@@ -53,7 +53,7 @@ export const googleAuthenticate = (state, code) => async dispatch => {
     if (state && code && !localStorage.getItem('access')){
         const config = {
             headers: {
-                'Content-Type': 'application/x-www.form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded'
             }
         };
 
@@ -64,9 +64,9 @@ export const googleAuthenticate = (state, code) => async dispatch => {
 
         // to make URI more URL friendly, and encode it to proper format
         const formBody = Object.keys(details).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(details[key])).join('&')
-
+        
         try {
-            const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/o/google-oauth2/?${formBody}`, config);
+            const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/o/google-oauth2/`,formBody, config);
 
             dispatch({
                 type: GOOGLE_AUTH_SUCCESS,
