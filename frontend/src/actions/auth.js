@@ -121,8 +121,8 @@ export const check_authenticated = () => async dispatch => {
 
 
 export const login = (email, password) => async dispatch => {
-    console.log('🔐 Login attempt for:', email);
-    console.log('🌐 Using hardcoded API URL:', process.env.REACT_APP_API_URL);
+    console.log('Login attempt for:', email);
+    console.log('Using hardcoded API URL:', process.env.REACT_APP_API_URL);
     
     const config = {
         headers: {
@@ -131,15 +131,15 @@ export const login = (email, password) => async dispatch => {
     }
 
     const body = JSON.stringify({ email, password });
-    console.log('📤 Request body:', body);
+    console.log('Request body:', body);
 
     try{
         const url = `${process.env.REACT_APP_API_URL}/auth/jwt/create`;
-        console.log('🌐 Making POST request to:', url);
+        console.log('Making POST request to:', url);
         
         const res = await axios.post(url, body, config);
 
-        console.log('✅ Login successful! Response:', res.data);
+        console.log('Login successful! Response:', res.data);
         dispatch ({
             type: LOGIN_SUCCESS,
             payload: res.data
@@ -147,7 +147,7 @@ export const login = (email, password) => async dispatch => {
 
         dispatch(load_user());
     } catch (err) {
-        console.error('❌ Login failed!');
+        console.error('Login failed!');
         console.error('Error details:', err.response?.data || err.message);
         console.error('Status code:', err.response?.status);
         console.error('Full error:', err);
@@ -178,7 +178,7 @@ export const signup = (first_name, last_name, email, password, re_password) => a
 
         dispatch(load_user());
     } catch (err) {
-        console.error('❌ Login failed!');
+        console.error('Login failed!');
         console.error('Error details:', err.response?.data || err.message);
         console.error('Status code:', err.response?.status);
         console.error('Full error:', err);
@@ -206,7 +206,7 @@ export const verify = (uid, token) => async dispatch => {
             type: ACTIVATION_SUCCESS,
         });
     } catch (err) {
-        console.error('❌ Login failed!');
+        console.error('Login failed!');
         console.error('Error details:', err.response?.data || err.message);
         console.error('Status code:', err.response?.status);
         console.error('Full error:', err);
