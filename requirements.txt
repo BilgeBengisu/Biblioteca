@@ -18,3 +18,4 @@ query-string
 django-environ
 vite
 @types/react-router-dom
+@types/react

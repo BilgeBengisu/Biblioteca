@@ -1,15 +1,53 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 import './Login.css';
+import api from '../lib/api.tsx';
 
-const Login: React.FC = () =>{
-    const [emailOrUsername, setEmailOrUsername] = useState("");
-    const [password, setPassword] = useState("");
+const Login: React.FC = () => {
+    const [formData, setFormData] = useState({
+        emailOrUsername:'',
+        password:''
+    });
+    const { emailOrUsername, password} = formData
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
+
+    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({
+        ...formData,
+        [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement login logic here
-        console.log("Logging in with:", { emailOrUsername, password });
+        setError(null);
+        setLoading(true);
+        try {
+            // Backend DJOSER LOGIN_FIELD is 'email' — send email and password to full path
+            const payload = { email: emailOrUsername, password };
+            const { data } = await api.post('/api/auth/jwt/create/', payload);
+
+            // Expected response: { access: string, refresh: string }
+            if (data?.access) {
+                localStorage.setItem('access_token', data.access);
+            }
+            if (data?.refresh) {
+                localStorage.setItem('refresh_token', data.refresh);
+            }
+
+            // Navigate to a protected page after login
+            navigate('/profile');
+        } catch (err: any) {
+            // Try to extract a useful message from axios error
+            const msg = err?.response?.data || err?.message || 'Login failed';
+            setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            console.error('Login error', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -22,7 +60,8 @@ const Login: React.FC = () =>{
                     <input
                         type="text"
                         value={emailOrUsername}
-                        onChange={(e) => setEmailOrUsername(e.target.value)}
+                        name="emailOrUsername" 
+                        onChange={(e) => onChange(e)}
                         placeholder="Enter your username or email"
                         required
                     />
@@ -32,13 +71,16 @@ const Login: React.FC = () =>{
                     <input
                         type="password"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        name="password"
+                        onChange={(e) => onChange(e)}
                         placeholder="Enter your password"
                         required
                     />
                 </label>
                 <button type="submit">Login</button>
             </form>
+            {loading && <p className="login-status">Logging in…</p>}
+            {error && <p className="login-error">{error}</p>}
         </div>
     );
 };

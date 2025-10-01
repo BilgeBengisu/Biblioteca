@@ -1,6 +1,6 @@
 // talking to the backend
 
-import { api } from "../lib/api";
+import api from "../lib/api.tsx";
 
 type JwtResponse = { access: string; refresh: string };
 

@@ -64,7 +64,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # Add this BEFORE CommonMiddleware
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',  # Commented out - not needed for JWT API
+    #'django.middleware.csrf.CsrfViewMiddleware',  # Commented out - not needed for JWT API (if active, will overwrite JWT API)
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -111,7 +111,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = "b.akyol26@ncf.edu"
-EMAIL_HOST_PASSWORD = "qupnfkwwqbmpffuf"
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
 
 # Password validation
@@ -182,7 +182,7 @@ SIMPLE_JWT = {
 
 # DJOSER Configuration - consolidated into one
 DJOSER = {
-    'LOGIN_FIELD': 'email',
+    'LOGIN_FIELD': 'username',
     'USER_CREATE_PASSWORD_RETYPE': True,
     'SET_USERNAME_RETYPE': True,
     'SET_PASSWORD_RETYPE': True,
@@ -195,7 +195,7 @@ DJOSER = {
     'ACTIVATION_URL': 'activate/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': True,
     'SOCIAL_AUTH_TOKEN_STRATEGY': 'djoser.social.token.jwt.TokenStrategy',
-    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': ['http://localhost:3000'],
+    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': ['http://localhost:3000', 'http://localhost:5173'],
     'SERIALIZERS': {
         'user_create': 'accounts.serializers.UserCreateSerializer',
         'user': 'accounts.serializers.UserCreateSerializer',
@@ -218,12 +218,26 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['first_name', 'last_name']
 AUTH_USER_MODEL = 'accounts.UserAccount'
 
 # CORS Configuration
-CORS_ALLOW_CREDENTIALS = env.bool('CORS_ALLOW_CREDENTIALS')
+# Allow overriding from .env, but provide safe defaults for local development
+# In production, set these explicitly in your environment.
+CORS_ALLOW_CREDENTIALS = env.bool('CORS_ALLOW_CREDENTIALS', default=True)
 
-# TO-DO: Change this in production
-CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS')
+# If you want to allow all origins in dev, set CORS_ALLOW_ALL_ORIGINS=True in .env
+CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
 
-CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS')
+# Explicit list of allowed origins (useful when not allowing all origins)
+# Useful defaults for local frontend dev servers
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+]
+
+# CSRF_TRUSTED_ORIGINS must include the scheme (http://) in Django >=4.0
+# Provide local defaults but allow overriding via .env for production
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+]
 
 CORS_ALLOWED_HEADERS = [
     'accept',
