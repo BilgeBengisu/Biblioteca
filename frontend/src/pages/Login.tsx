@@ -26,9 +26,9 @@ const Login: React.FC = () => {
         setError(null);
         setLoading(true);
         try {
-            // Backend DJOSER LOGIN_FIELD is 'email' — send email and password to full path
-            const payload = { email: emailOrUsername, password };
-            const { data } = await api.post('/api/auth/jwt/create/', payload);
+            // Post identifier (username or email) to our identifier-login endpoint
+            const payload = { identifier: emailOrUsername, password };
+            const { data } = await api.post('/auth/login/', payload);
 
             // Expected response: { access: string, refresh: string }
             if (data?.access) {

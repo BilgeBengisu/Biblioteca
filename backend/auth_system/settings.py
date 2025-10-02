@@ -165,8 +165,9 @@ REST_FRAMEWORK = {
     ),
 }
 
-# google auth
+# registering backend models: emailorusername login model, google auth, and modelBackend as fallback
 AUTHENTICATION_BACKENDS = (
+    'accounts.backends.EmailOrUsernameModelBackend',
     'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend'
 )

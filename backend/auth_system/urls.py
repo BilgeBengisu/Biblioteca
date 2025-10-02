@@ -6,6 +6,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/auth/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.jwt')),
+    path('api/auth/', include('accounts.urls')),
     path('auth/', include('djoser.social.urls')), # google auth
 ]
 
