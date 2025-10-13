@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import './Login.css';
+import { useAuth } from "../contexts/AuthContext";
+import { getCurrentUser } from '../services/auth.tsx';
 import api from '../lib/api.tsx';
 
 const Login: React.FC = () => {
+    const { setUser } = useAuth();
+    
     const [formData, setFormData] = useState({
         emailOrUsername:'',
         password:''
@@ -37,6 +41,11 @@ const Login: React.FC = () => {
             if (data?.refresh) {
                 localStorage.setItem('refresh_token', data.refresh);
             }
+
+            // Fetch and set the current user in global state
+            // before navigating to protected page
+            const user = await getCurrentUser();
+            setUser(user);
 
             // Navigate to a protected page after login
             navigate('/profile');
