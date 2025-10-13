@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "clean": "rm -rf ../backend/build || rmdir /S /Q ..\\backend\\build",
+    "build": "npm run clean && tsc -b && vite build && cp -r dist ../backend/build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

@@ -15,7 +15,6 @@ import os
 import environ
 from datetime import timedelta
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,6 +31,9 @@ SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
+
+# Frontend URL
+FRONTEND_URL = env('FRONTEND_URL', default='localhost:5173')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -147,11 +149,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'build/static')
+    # point to the frontend build assets directory (no leading slash)
+    os.path.join(BASE_DIR, 'build', 'assets'),
+    # also include the root build dir to serve index.html and other files
+    os.path.join(BASE_DIR, 'build'),
     ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 
 # JSON Web Token Authentication setting as default authentication
 REST_FRAMEWORK = {
@@ -182,6 +188,9 @@ SIMPLE_JWT = {
 }
 
 # DJOSER Configuration - consolidated into one
+
+DOMAIN = FRONTEND_URL
+SITE_NAME = env("SITE_NAME", default="Biblioteca")
 DJOSER = {
     'LOGIN_FIELD': 'username',
     'USER_CREATE_PASSWORD_RETYPE': True,
@@ -195,6 +204,9 @@ DJOSER = {
     'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}',
     'ACTIVATION_URL': 'activate/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': True,
+    "EMAIL": {
+        "activation": "djoser.email.ActivationEmail",
+    },
     'SOCIAL_AUTH_TOKEN_STRATEGY': 'djoser.social.token.jwt.TokenStrategy',
     'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': ['http://localhost:3000', 'http://localhost:5173'],
     'SERIALIZERS': {

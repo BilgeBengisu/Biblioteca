@@ -11,11 +11,9 @@ redux
 react-redux
 redux-thunk
 react-router-dom
-@reduxjs/toolkit
+reduxjs
 axios
 social-auth-app-django
 query-string
 django-environ
 vite
-@types/react-router-dom
-@types/react

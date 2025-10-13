@@ -34,6 +34,9 @@ const Navbar: React.FC = () => {
         ) : (
           <>
             <li>
+              <Link to="/posts">Posts</Link>
+            </li>
+            <li>
               <Link to="/profile">{user?.username || 'Profile'}</Link>
             </li>
             <li>

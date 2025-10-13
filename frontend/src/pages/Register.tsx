@@ -44,7 +44,7 @@ const Register: React.FC = () => {
             }
 
             // After successful registration, navigate to login or profile depending on backend behavior
-            navigate('/profile');
+            navigate('/activate');
         } catch (err: any) {
             const msg = err?.response?.data || err?.message || 'Registration failed';
             setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
