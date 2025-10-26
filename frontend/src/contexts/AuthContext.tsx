@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
-import { getCurrentUser, logout as authLogout, refresh as refreshAccessToken} from "../services/auth";
+// import { getCurrentUser, logout as authLogout, refresh as refreshAccessToken} from "../services/auth";
+import { supabase } from "../services/supabaseClient";
 
+// describing the shape of the context
 type AuthContextType = {
   isAuthenticated: boolean;
   user: any | null;
@@ -9,6 +11,7 @@ type AuthContextType = {
   refreshUser: () => Promise<void>;
 };
 
+// creating auth context with default values
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   user: null,
@@ -17,34 +20,62 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 });
 
+// component to provide auth context to its children
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any | null>(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    const refresh = localStorage.getItem("refresh_token");
-    if (!token || !refresh) return;
+  const getSession = async () => {const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
 
-    // Try to refresh the token and fetch the user
-    refreshAccessToken()
-      .then(() => getCurrentUser().then(setUser))
-      .catch(() => {
-        authLogout();
-        setUser(null);
-      });
-  }, []);
+    if (error) {
+      console.error("Error getting session:", error);
+      setUser(null);
+      return;
+    }
 
-  const logout = () => {
-    authLogout();
+    if (session?.user) {
+      setUser(session.user);
+    } else {
+      setUser(null);
+    }
+  };
+
+  getSession();
+
+  // useEffect(() => {
+  //   const token = localStorage.getItem("access_token");
+  //   const refresh = localStorage.getItem("refresh_token");
+  //   if (!token || !refresh) return;
+
+  //   // Try to refresh the token and fetch the user
+  //   refreshAccessToken()
+  //     .then(() => getCurrentUser().then(setUser))
+  //     .catch(() => {
+  //       authLogout();
+  //       setUser(null);
+  //     });
+  // }, []);
+
+  const logout = async () => {
     setUser(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error.message);
+    }
   };
 
   const refreshUser = async () => {
-    try {
-      const u = await getCurrentUser();
-      setUser(u);
-    } catch {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) {
+      console.error("Error refreshing user:", error);
       setUser(null);
+    } else {
+      setUser(user);
     }
   };
 

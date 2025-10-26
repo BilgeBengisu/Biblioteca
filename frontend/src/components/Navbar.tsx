@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
               <Link to="/posts">Posts</Link>
             </li>
             <li>
-              <Link to="/profile">{user?.username || 'Profile'}</Link>
+              <Link to="/profile">{user?.email || 'Profile'}</Link>
             </li>
             <li>
               <button className="link-button" onClick={handleLogout}>

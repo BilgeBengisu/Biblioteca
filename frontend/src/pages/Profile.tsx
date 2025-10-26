@@ -5,7 +5,7 @@ const Profile: React.FC = () => {
     
     return (
         <div>
-            <h1>Bienvenido, {user?.username}</h1>
+            <h1>Bienvenido, {user?.email ?? "usuario"}</h1>
         </div>
     )
 }
