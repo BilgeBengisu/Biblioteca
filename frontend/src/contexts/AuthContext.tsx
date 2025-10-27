@@ -24,25 +24,51 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any | null>(null);
 
-  const getSession = async () => {const {
+  // helper to fetch profile row for a supabase user id
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .single(); // will return an error if no row found
+      console.log(data);
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+      return data;
+    } catch (err) {
+      console.error('Exception fetching profile:', err);
+      return null;
+    }
+  };
+
+  const getSession = async () => {
+    const {
       data: { session },
       error,
     } = await supabase.auth.getSession();
 
     if (error) {
-      console.error("Error getting session:", error);
+      console.error('Error getting session:', error);
       setUser(null);
       return;
     }
 
     if (session?.user) {
-      setUser(session.user);
+      const profile = await fetchProfile(session.user.id);
+      // attach profile under `profile` key so components can read username, etc.
+      setUser({ ...session.user, profile });
     } else {
       setUser(null);
     }
   };
 
-  getSession();
+  // Run once on mount
+  React.useEffect(() => {
+    getSession();
+  }, []);
 
   // useEffect(() => {
   //   const token = localStorage.getItem("access_token");
@@ -68,14 +94,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUser = async () => {
     const {
-      data: { user },
+      data: { user: user },
       error,
     } = await supabase.auth.getUser();
     if (error) {
-      console.error("Error refreshing user:", error);
+      console.error('Error refreshing user:', error);
       setUser(null);
+      return;
+    }
+
+    if (user) {
+      const profile = await fetchProfile(user.id);
+      setUser({ ...user, profile });
     } else {
-      setUser(user);
+      setUser(null);
     }
   };
 

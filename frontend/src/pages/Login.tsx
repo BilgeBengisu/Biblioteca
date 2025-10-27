@@ -69,6 +69,28 @@ const Login: React.FC = () => {
         // }
     };
 
+    const handleGoogleLogin = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/profile', // after login
+            },
+            });
+
+            if (error) throw error;
+
+        } catch (err: any) {
+            console.error("Google login error:", err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="login-container">
             <h1>Login</h1>
@@ -102,6 +124,10 @@ const Login: React.FC = () => {
             </form>
             {loading && <p className="login-status">Logging in…</p>}
             {error && <p className="login-error">{error}</p>}
+
+            <button className="google-login-button" onClick={handleGoogleLogin}>
+            Continue with Google
+            </button>
         </div>
     );
 };
