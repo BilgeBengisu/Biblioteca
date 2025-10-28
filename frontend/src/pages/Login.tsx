@@ -32,10 +32,21 @@ const Login: React.FC = () => {
             setError(error.message);
             return;
         }
-        if (data) {
+        if (data?.user) {
             setLoading(false);
             setMessage("User signed in");
             setError(null);
+            
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", data.user.id)
+                .single();
+
+                if (profileError) {
+                console.error("Error fetching profile:", profileError.message);
+            }
+            setUser({ ...data.user, profile });
             navigate('/profile');
         }
 

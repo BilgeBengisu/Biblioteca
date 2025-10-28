@@ -9,6 +9,8 @@ type AuthContextType = {
   setUser: (u: any | null) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  fetchFollowers: (userId: string) => Promise<number>;
+  fetchFollowing: (userId: string) => Promise<number>;
 };
 
 // creating auth context with default values
@@ -18,6 +20,8 @@ const AuthContext = createContext<AuthContextType>({
   setUser: () => {},
   logout: () => {},
   refreshUser: async () => {},
+  fetchFollowers: async () => 0,
+  fetchFollowing: async () => 0,
 });
 
 // component to provide auth context to its children
@@ -29,10 +33,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username')
+        .select('*')
         .eq('id', userId)
         .single(); // will return an error if no row found
-      console.log(data);
       if (error) {
         console.error('Error fetching profile:', error);
         return null;
@@ -43,6 +46,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null;
     }
   };
+
+  const fetchFollowers = async (userId: string): Promise<number> => {
+    const { count, error } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("followed_id", userId);
+
+    if (error) {
+      console.error("Error fetching followers:", error.message);
+      return 0;
+    }
+
+    return count ?? 0;
+  };
+
+  const fetchFollowing = async (userId: string): Promise<number> => {
+    const { count, error } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", userId);
+
+    if (error) {
+      console.error("Error fetching following:", error.message);
+      return 0;
+    }
+
+    return count ?? 0;
+  };
+
 
   const getSession = async () => {
     const {
@@ -92,9 +124,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // sbUser variable name is used to distinguish from the `user` state variable
   const refreshUser = async () => {
     const {
-      data: { user: user },
+      data: { user: sbUser },
       error,
     } = await supabase.auth.getUser();
     if (error) {
@@ -103,9 +136,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    if (user) {
-      const profile = await fetchProfile(user.id);
-      setUser({ ...user, profile });
+    if (sbUser) {
+      const profile = await fetchProfile(sbUser.id);
+      setUser({ ...sbUser, profile });
     } else {
       setUser(null);
     }
@@ -118,6 +151,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser,
       logout,
       refreshUser,
+      fetchFollowers,
+      fetchFollowing,
     }),
     [user]
   );
