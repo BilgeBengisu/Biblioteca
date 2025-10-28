@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import "./Register.css";
 import api from '../lib/api.tsx';
+import { supabase } from '../services/supabaseClient.tsx';
 
 const Register: React.FC = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [message, setMessage] = useState('');
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -15,48 +17,76 @@ const Register: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setMessage('');
+
+        // supabase
+        const {data, error} = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    username: username,
+                }
+            }
+        });
+
+        if (error) {
+            setError(error.message);
+            return;
+        }
+        if (data) {
+            setMessage("User account created");
+        }
         setError(null);
         if (password !== confirmPassword) {
             setError('Passwords do not match');
             return;
         }
 
-        setLoading(true);
-        try {
-            // Djoser can accept username, email, password, re_password
-            const payload = {
-                username,
-                email,
-                password,
-                re_password: confirmPassword,
-            };
+        // setLoading(true);
+        // try {
+        //     // Djoser can accept username, email, password, re_password
+        //     const payload = {
+        //         username,
+        //         email,
+        //         password,
+        //         re_password: confirmPassword,
+        //     };
 
-            // backend mounts djoser at /api/auth/, so post to that full path
-            const { data } = await api.post('/auth/users/', payload);
+        //     // backend mounts djoser at /api/auth/, so post to that full path
+        //     const { data } = await api.post('/auth/users/', payload);
 
-            // Djoser user creation often does not return JWT tokens by default.
-            // If your backend is configured to return tokens on signup, store them.
-            if (data?.access) {
-                localStorage.setItem('access_token', data.access);
-            }
-            if (data?.refresh) {
-                localStorage.setItem('refresh_token', data.refresh);
-            }
+        //     // Djoser user creation often does not return JWT tokens by default.
+        //     // If your backend is configured to return tokens on signup, store them.
+        //     if (data?.access) {
+        //         localStorage.setItem('access_token', data.access);
+        //     }
+        //     if (data?.refresh) {
+        //         localStorage.setItem('refresh_token', data.refresh);
+        //     }
 
-            // After successful registration, navigate to login or profile depending on backend behavior
-            navigate('/activate');
-        } catch (err: any) {
-            const msg = err?.response?.data || err?.message || 'Registration failed';
-            setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
-            console.error('Register error', err);
-        } finally {
-            setLoading(false);
-        }
+        //     // After successful registration, navigate to login or profile depending on backend behavior
+        //     navigate('/activate');
+        // } catch (err: any) {
+        //     const msg = err?.response?.data || err?.message || 'Registration failed';
+        //     setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+        //     console.error('Register error', err);
+        // } finally {
+        //     setLoading(false);
+        // }
+
+        // Clear form fields
+        setEmail('');
+        setUsername('');
+        setPassword('');
+        setConfirmPassword('');
     };
 
     return (
         <div className="register-container">
             <h1>Register</h1>
+            <br></br>
+            { message && <span>{message}</span>}
             <form className="register-form" onSubmit={handleSubmit}>
                 <label>
                     Username
