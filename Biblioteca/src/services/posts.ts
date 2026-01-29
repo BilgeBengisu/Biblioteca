@@ -31,6 +31,9 @@ export async function getPosts(): Promise<Post[]> {
   return data.map(mapPostRow);
 }
 
+
+// mapping database row to Post type
+// this step is to convert the database to my UI objects
 function mapPostRow(row: any): Post {
   return {
     id: row.id,

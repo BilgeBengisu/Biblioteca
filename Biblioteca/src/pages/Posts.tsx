@@ -5,11 +5,36 @@ import type { Post } from "../types/Post";
 import { useEffect, useState } from "react";
 
 export const Posts = () => {
-    // getting posts from the service to display
     const [posts, setPosts] = useState<Post[]>([]);
-        useEffect(() => {
-            getPosts().then(setPosts);
-        }, []);
+
+    // loading and error states for more responsive UI
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // getting posts from the service to display
+    useEffect(() => {
+        getPosts()
+        .then(setPosts)
+        .catch((err) => {
+            console.error(err);
+            setError("No se pudieron cargar las publicaciones");
+        })
+        .finally(() => setLoading(false));
+    }, []);
+    if (loading) {
+        return <p className="text-center text-sm text-gray-500">Cargando publicaciones…</p>;
+    }
+
+    if (error) {
+        return <p className="text-center text-sm text-red-500">{error}</p>;
+    }
+    if (posts.length === 0) {
+        return (
+            <p className="text-center text-sm text-gray-500">
+            No hay publicaciones todavía.
+            </p>
+        );
+    }
 
     return (
         <main className="mx-auto max-w-2xl space-y-6 py-6">
