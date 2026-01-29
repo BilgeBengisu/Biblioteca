@@ -1,6 +1,7 @@
 // BookCard component for Books page
 
 import type { BookData } from "../types/Book";
+import { StarRating } from "./StarRating";
 
 type BookCardProps = {
   book: BookData;
@@ -46,17 +47,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
       </p>
 
       {/* Rating */}
-      {rating !== null && (
-        <div className="text-xs text-yellow-500 mt-1 flex items-center gap-1">
-          <span>
-            {"★".repeat(rating)}
-            {"☆".repeat(5 - rating)}
-          </span>
-          <span className="text-neutral-500">
-            {book.rating?.toFixed(1)}
-          </span>
-        </div>
-      )}
+      <StarRating rating={book.rating ?? 0} />
     </div>
   );
 };
