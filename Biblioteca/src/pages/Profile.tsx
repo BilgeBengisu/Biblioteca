@@ -1,0 +1,32 @@
+import  { useAuth } from "../contexts/AuthContext";
+import defaultAvatar from "../assets/default-avatar.svg";
+
+export const Profile = () => {
+    const { profileUser, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth();
+    // setting profile picture for displaying
+    const profile_picture =
+        (profileUser?.profile?.picture_url as string | undefined) ||
+        (profileUser?.user_metadata?.picture_url as string | undefined) ||
+        null;
+    const displayProfilePicture = profile_picture || defaultAvatar;
+    const displayName = profileUser?.profile?.username || profileUser?.user_metadata?.full_name || profileUser?.email || "usuario";
+
+    return (
+        <div className="max-w-3xl mx-auto p-6">
+            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6 flex items-start gap-6">
+                <div className="profile-pic-wrapper ring-1 ring-neutral-200 dark:ring-neutral-800 flex-shrink-0">
+                    <img
+                        src={displayProfilePicture}
+                        alt="Profile"
+                        className="profile-pic"
+                    />
+                </div>
+                <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-4">
+                    <h1 className="text-2xl font-semibold tracking-tight truncate text-red-500">{displayName}</h1>
+                </div>
+                </div>
+            </div>
+        </div>
+    )
+}
