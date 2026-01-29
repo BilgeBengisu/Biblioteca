@@ -1,5 +1,5 @@
 export interface BooksData {
-  books?: Book[];
+  books?: BookData[];
 }
 
 export interface BookData {

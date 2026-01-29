@@ -1,15 +1,23 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
+import mockProfilePic from "../assets/bilge_profile.png";
 
 export const Profile = () => {
     const { profileUser, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth();
+    const mockUser = {
+        id: "12345",
+        email: "b.akyol26@ncf.edu",
+        username: "bilge26",
+        picture_url: mockProfilePic,
+    };
+
     // setting profile picture for displaying
     const profile_picture =
-        (profileUser?.profile?.picture_url as string | undefined) ||
-        (profileUser?.user_metadata?.picture_url as string | undefined) ||
+        (mockUser?.picture_url as string | undefined) ||
+        (mockUser?.user_metadata?.picture_url as string | undefined) ||
         null;
     const displayProfilePicture = profile_picture || defaultAvatar;
-    const displayName = profileUser?.profile?.username || profileUser?.user_metadata?.full_name || profileUser?.email || "usuario";
+    const displayName = mockUser?.username || mockUser?.user_metadata?.full_name || mockUser?.email || "usuario";
 
     return (
         <div className="max-w-3xl mx-auto p-6">
@@ -18,7 +26,7 @@ export const Profile = () => {
                     <img
                         src={displayProfilePicture}
                         alt="Profile"
-                        className="profile-pic"
+                        className="w-17 h-17 rounded-full object-cover"
                     />
                 </div>
                 <div className="flex-1 min-w-0">
