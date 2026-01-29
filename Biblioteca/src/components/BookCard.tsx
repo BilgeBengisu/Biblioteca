@@ -29,7 +29,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
       {/* Cover */}
       <div className="aspect-[2/3] mb-2 rounded-lg overflow-hidden bg-neutral-200 dark:bg-neutral-800 shadow-md group-hover:shadow-xl transition-shadow">
         <img
-          src={book.image?.url || "/default-book-cover.png"}
+          src={book.image?.url || "../public/default-book-cover.png"}
           alt={book.title}
           className="w-full h-full object-cover"
           loading="lazy"
