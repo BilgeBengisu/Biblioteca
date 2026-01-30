@@ -17,6 +17,7 @@ export async function getPosts(): Promise<Post[]> {
         books (
             id,
             title,
+            author,
             cover_url,
             slug,
             created_at
@@ -50,6 +51,7 @@ function mapPost(row: any): Post {
       ? {
           id: row.books.id,
           title: row.books.title,
+          author: row.books.author,
           coverUrl: row.books.cover_url,
           slug: row.books.slug ?? undefined, // <- include slug here
           created_at: row.books.created_at,

@@ -1,5 +1,5 @@
 import type { Post } from "../types/Post";
-import default_avatar  from "../assets/default-avatar.svg";
+import default_avatar from "../assets/default-avatar.svg";
 import { useNavigate } from "react-router-dom";
 
 type PostCardProps = {
@@ -29,56 +29,55 @@ export const PostCard = ({ post }: PostCardProps) => {
 
       {/* Post Body */}
       <div className="space-y-2">
+        {/* For text-only posts */}
         {type === "text" && <p className="text-sm">{content}</p>}
 
-        {type === "status" && (
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold text-blue-600 dark:text-blue-400">
-              {status === "want_to_read" && "Want to read"}
-              {status === "reading" && "Reading"}
-              {status === "finished" && "Finished"}
-            </span>
-            {book && (
-              <p className="text-sm font-medium">
-                Book: <span className="italic">{book.title}</span>
-              </p>
+        {/* For status or review posts with book */}
+        {(type === "status" || type === "review") && (
+          <div className="flex flex-col gap-2">
+            {/* Status */}
+            {type === "status" && status && (
+              <span className="font-semibold text-blue-600 dark:text-blue-400">
+                {status === "want_to_read" && "Quiere Leer"}
+                {status === "reading" && "Leyendo"}
+                {status === "finished" && "Leído"}
+              </span>
             )}
-            {content && <p className="text-sm">{content}</p>}
-          </div>
-        )}
+            {/* Status */}
+            {type === "review" && (
+              <span className="font-semibold text-blue-600 dark:text-blue-400">
+                Compartió sobre
+              </span>
+            )}
 
-        {type === "review" && (
-          <div className="flex flex-col gap-1">
+            {/* Book display */}
             {book && (
-              <p className="text-sm font-medium">
-                Review for: <span className="italic">{book.title}</span>
-              </p>
+              <div
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => book.slug && navigate(`/books/${book.slug}`)}
+              >
+                {book.coverUrl && (
+                  <img
+                    src={book.coverUrl}
+                    alt={book.title}
+                    className="w-20 h-28 object-cover rounded shadow-sm"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-lg truncate">{book.title}</h3>
+                  {book.author && (
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      por {book.author}
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
+            {/* Status or Review Content */}
             {content && <p className="text-sm">{content}</p>}
           </div>
         )}
       </div>
-
-      {/* Book Display */}
-      {book && (
-        <div className="flex items-center gap-3 mt-2 cursor-pointer" onClick={() => book.slug && navigate(`/books/${book.slug}`)}>
-          {book.coverUrl && (
-            <img
-              src={book.coverUrl}
-              alt={book.title}
-              className="w-20 h-28 object-cover rounded shadow-sm"
-            />
-          )}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg truncate">{book.title}</h3>
-            {book.author && (
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                de {book.author}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
     </article>
   );
 };

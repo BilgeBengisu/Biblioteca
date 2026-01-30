@@ -23,10 +23,10 @@ export const BookView = () => {
     >("descripcion");
 
     // handle loading and error states
-    if (loading) return <div>Loading…</div>;
-    if (error) return <div>Error loading book</div>;
+    if (loading) return <div>Cargando...</div>;
+    if (error) return <div>Error al cargar el libro</div>;
     if (!data || !data.books?.length) {
-        return <div>Book not found</div>;
+        return <div>Libro no ha sido encontrado</div>;
     }
     const bookData = data?.books?.[0];
 
@@ -43,7 +43,7 @@ export const BookView = () => {
     } : null;
     
     if (!data) {
-        return <div>Book not found</div>;
+        return <div>Libro no ha sido encontrado</div>;
     }
 
 
@@ -54,7 +54,7 @@ export const BookView = () => {
                 <div className="flex-1 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold">{book?.title}</h1>
-                        <p className="text-lg text-gray-700 mt-2">by {book?.author}</p>
+                        <p className="text-lg text-gray-700 mt-2">por {book?.author}</p>
                     </div>
                 </div>
                 {/* TO BE COMPLETED */}
