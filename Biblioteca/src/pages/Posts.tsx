@@ -3,6 +3,7 @@ import { mockPosts } from "../data/mockPosts";
 import { getPosts } from "../services/posts";
 import type { Post } from "../types/Post";
 import { useEffect, useState } from "react";
+import { NewPostForm } from "../forms/NewPostForm";
 
 export const Posts = () => {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -10,6 +11,12 @@ export const Posts = () => {
     // loading and error states for more responsive UI
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
+    // handler to add newly created post to the posts list
+    // this updates the ui without refetching all posts
+    const handlePostCreated = (post: Post) => {
+        setPosts([post, ...posts]); // prepend new post to top
+    };
 
     // const mockPosts: Post[] = [
     //     {
@@ -48,10 +55,11 @@ export const Posts = () => {
     }
 
     return (
-        <main className="mx-auto max-w-2xl space-y-6 py-6">
-        {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-        ))}
-        </main>
+        <div className="max-w-3xl mx-auto p-4 space-y-4">
+            <NewPostForm onPostCreated={handlePostCreated} />
+            {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+            ))}
+        </div>
     );
 };
