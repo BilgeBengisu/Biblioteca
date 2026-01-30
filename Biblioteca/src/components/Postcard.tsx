@@ -52,7 +52,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
           </span>
         </div>
       </div>
-      {/* Delete button in top right */}
+      {/* Delete button for the postcard - only shows if the user is the author of the post */}
       {user?.id === author.id && (
         <button
           onClick={handleDelete}
