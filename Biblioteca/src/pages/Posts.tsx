@@ -11,6 +11,16 @@ export const Posts = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    // const mockPosts: Post[] = [
+    //     {
+    //         id: "1",
+    //         user_id: "123",
+    //         type: "text",
+    //         content: "Just started using Biblioteca 📚",
+    //         created_at: new Date().toISOString(),
+    //     },
+    // ];
+
     // getting posts from the service to display
     useEffect(() => {
         getPosts()
@@ -21,6 +31,7 @@ export const Posts = () => {
         })
         .finally(() => setLoading(false));
     }, []);
+
     if (loading) {
         return <p className="text-center text-sm text-gray-500">Cargando publicaciones…</p>;
     }

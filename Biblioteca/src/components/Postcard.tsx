@@ -1,57 +1,81 @@
 import type { Post } from "../types/Post";
+import default_avatar  from "../assets/default-avatar.svg";
+import { useNavigate } from "react-router-dom";
 
-interface PostCardProps {
+type PostCardProps = {
   post: Post;
-}
+};
 
 export const PostCard = ({ post }: PostCardProps) => {
-  const { author, content, createdAt, status, book } = post;
+  const { author, type, content, status, book, created_at } = post;
+  const navigate = useNavigate();
 
   return (
-    <article className="rounded-2xl bg-white p-4 shadow-sm space-y-4">
+    <article className="rounded-2xl bg-white p-4 shadow-sm space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img
-            src={author.avatarUrl ?? "/avatar.png"}
-            alt={author.username}
-            className="h-8 w-8 rounded-full"
-          />
-
-          <div>
-            <p className="text-sm font-medium">{author.username}</p>
-            <p className="text-xs text-gray-500">
-              {new Date(createdAt).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-
-        {status && (
-          <span className="rounded-full bg-blue-100 px-2 py-1 text-xs">
-            {status.replaceAll("_", " ")}
+      <div className="flex items-center gap-3">
+        <img
+          src={author.avatarUrl ?? default_avatar}
+          alt={author.username}
+          className="h-10 w-10 rounded-full object-cover"
+        />
+        <div>
+          <p className="text-sm font-medium">{author.username}</p>
+          <span className="text-xs text-neutral-500">
+            {new Date(created_at).toLocaleDateString()}
           </span>
+        </div>
+      </div>
+
+      {/* Post Body */}
+      <div className="space-y-2">
+        {type === "text" && <p className="text-sm">{content}</p>}
+
+        {type === "status" && (
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold text-blue-600 dark:text-blue-400">
+              {status === "want_to_read" && "Want to read"}
+              {status === "reading" && "Reading"}
+              {status === "finished" && "Finished"}
+            </span>
+            {book && (
+              <p className="text-sm font-medium">
+                Book: <span className="italic">{book.title}</span>
+              </p>
+            )}
+            {content && <p className="text-sm">{content}</p>}
+          </div>
+        )}
+
+        {type === "review" && (
+          <div className="flex flex-col gap-1">
+            {book && (
+              <p className="text-sm font-medium">
+                Review for: <span className="italic">{book.title}</span>
+              </p>
+            )}
+            {content && <p className="text-sm">{content}</p>}
+          </div>
         )}
       </div>
 
-      {/* Content */}
-      <p className="text-sm text-gray-800 whitespace-pre-line">
-        {content}
-      </p>
-
-      {/* Book Preview */}
+      {/* Book Display */}
       {book && (
-        <div className="flex gap-4 rounded-xl bg-gray-50 p-3">
+        <div className="flex items-center gap-3 mt-2 cursor-pointer" onClick={() => book.slug && navigate(`/books/${book.slug}`)}>
           {book.coverUrl && (
             <img
               src={book.coverUrl}
               alt={book.title}
-              className="h-20 w-14 rounded-md object-cover"
+              className="w-20 h-28 object-cover rounded shadow-sm"
             />
           )}
-
-          <div>
-            <p className="text-sm font-semibold">{book.title}</p>
-            <p className="text-xs text-gray-600">{book.author}</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg truncate">{book.title}</h3>
+            {book.author && (
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                de {book.author}
+              </p>
+            )}
           </div>
         </div>
       )}

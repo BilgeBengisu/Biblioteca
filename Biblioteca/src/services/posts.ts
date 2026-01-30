@@ -1,63 +1,61 @@
 import type { Post } from "../types/Post";
 import { mockPosts } from "../data/mockPosts";
 import { supabase } from "../supabase-client";
+import default_avatar  from "../assets/default-avatar.svg";
 
 export async function getPosts(): Promise<Post[]> {
-  const { data, error } = await supabase
-    .from("posts")
-    .select(`
-      id,
-      created_at,
-      content_type,
-      action_type,
-      rating,
-      review_text,
-      book_id,
-      book_data,
-      user_id,
-      profiles (
-        id,
-        username,
-        picture_url
-      )
-    `)
-    .order("created_at", { ascending: false });
+    // joining posts table with profiles and books in the query
+    const { data, error } = await supabase
+        .from("posts")
+        .select(`
+        *,
+        profiles (
+            id,
+            username,
+            avatar_url
+        ),
+        books (
+            id,
+            title,
+            cover_url,
+            slug,
+            created_at
+        )
+        `)
+        .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error(error);
-    return [];
-  }
+    if (error) {
+        console.error(error);
+        return [];
+    }
 
-  return data.map(mapPostRow);
+    return data.map(mapPost);
 }
 
 
 // mapping database row to Post type
 // this step is to convert the database to my UI objects
-function mapPostRow(row: any): Post {
+function mapPost(row: any): Post {
   return {
     id: row.id,
-    createdAt: row.created_at,
-
     author: {
       id: row.profiles.id,
       username: row.profiles.username,
-      avatarUrl: row.profiles.picture_url,
+      avatarUrl: row.profiles.avatar_url,
     },
-
-    contentType: row.content_type,
-    content: row.review_text ?? null,
-
-    rating: row.rating ?? undefined,
-    status: row.action_type ?? undefined,
-
-    book: row.book_data
+    type: row.type,
+    content: row.content,
+    status: row.status ?? undefined,
+    book: row.books
       ? {
-          id: row.book_id,
-          title: row.book_data.title,
-          author: row.book_data.author,
-          coverUrl: row.book_data.cover_url ?? null,
+          id: row.books.id,
+          title: row.books.title,
+          coverUrl: row.books.cover_url,
+          slug: row.books.slug ?? undefined, // <- include slug here
+          created_at: row.books.created_at,
         }
       : undefined,
+    rating: row.rating ?? undefined,
+    created_at: row.created_at,
   };
 }

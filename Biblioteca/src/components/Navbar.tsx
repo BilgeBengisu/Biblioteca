@@ -11,47 +11,49 @@ export const Navbar = () => {
             <div>
                 <div className="navbar-logo">
                     <Link to={"/"}>
-                        <img src={logo} alt="Biblioteca Logo" className="logo-img" />Biblioteca
+                        <img src={logo} alt="Biblioteca Logo" className="logo-img" />
                     </Link>
                 </div>
             </div>
             <ul className="navbar-links">
-                <div>
-                    {user ? (
-                        <div>
-                            <li>
-                                <Link to="/posts">Posts</Link>
-                            </li>
-                            <li>
-                                <Link to="/books">Books</Link>
-                            </li>
+                {user ? (
+                    <>
+                        <li>
+                            <Link to="/posts">Publicaciones</Link>
+                        </li>
+                        <li>
+                            <Link to="/books">Libros</Link>
+                        </li>
+                        <li>
                             <Link to="/profile" className="profile-link">
                                 <img
-                                src={
-                                    (user?.profile?.picture_url as string | undefined) ??
-                                    (user?.user_metadata?.picture_url as string | undefined) ??
-                                    default_avatar
-                                }
-                                alt="Profile"
-                                className="navbar-avatar"
+                                    src={
+                                        (user?.profile?.avatar_url as string | undefined) ??
+                                        (user?.user_metadata?.avatar_url as string | undefined) ??
+                                        default_avatar
+                                    }
+                                    alt="Profile"
+                                    className="navbar-avatar"
                                 />
                             </Link>
+                        </li>
+                        <li>
                             <button onClick={signOut}>Cerrar sesión</button>
-                        </div>
-                    ) : (
-                        <div>
-                            <li>
-                                <button onClick={signInWithGoogle}>Google</button>
-                            </li>
-                            <li>
-                                <Link to="/login">Entregar</Link>
-                            </li>
-                            <li>
-                                <Link to="/register">Registarse</Link>
-                            </li>
-                        </div>
-                    )}
-                </div>
+                        </li>
+                    </>
+                ) : (
+                    <>
+                        <li>
+                            <button onClick={signInWithGoogle}>Google</button>
+                        </li>
+                        <li>
+                            <Link to="/login">Entregar</Link>
+                        </li>
+                        <li>
+                            <Link to="/register">Registarse</Link>
+                        </li>
+                    </>
+                )}
             </ul>
         </nav>
     )

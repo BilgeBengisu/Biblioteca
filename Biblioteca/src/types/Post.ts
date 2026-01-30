@@ -7,6 +7,17 @@ export interface PostAuthor {
   avatarUrl: string | null;
 }
 
+// from DB
+export interface PostRow {
+  id: string;
+  user_id: string;
+  content: string;
+  status: string | null;
+  book_id: number | null;
+  created_at: string;
+}
+
+
 export interface PostBook {
   id: number;
   title: string;
@@ -14,17 +25,24 @@ export interface PostBook {
   coverUrl: string | null;
 }
 
+export type PostType = "text" | "status" | "review";
+
 export interface Post {
   id: string;
-  createdAt: string;
-
-  author: PostAuthor;
-
-  content: string | null; // review text or custom text
-  contentType: PostContentType;
-
-  status?: ReadingStatus;
-  rating?: number;
-
-  book?: PostBook;
+  author: {
+    id: string;
+    username: string;
+    avatarUrl?: string;
+  };
+  type: "text" | "status" | "review";
+  content?: string;
+  status?: "want_to_read" | "reading" | "finished";
+  book?: {
+    id: number;
+    title: string;
+    coverUrl?: string;
+  };
+  created_at: string;
 }
+
+

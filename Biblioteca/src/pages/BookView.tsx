@@ -49,7 +49,7 @@ export const BookView = () => {
 
     return (
         <div>
-            <div className="flex gap-6">
+            <div className="flex gap-6 relative">
                 <img src={book?.cover} alt={book?.title} className="h-64 rounded-lg" />
                 <div className="flex-1 flex justify-between items-center">
                     <div>
@@ -58,15 +58,9 @@ export const BookView = () => {
                     </div>
                 </div>
                 {/* TO BE COMPLETED */}
-                {typeof book?.rating === "number" && (
-                
-                <div className="ml-4">
-                    {/* StarRating component would go here if needed */}
-                    <div className="ml-4">
-                        <StarRating rating={book.rating} />
-                    </div>
+                <div className="p-4 absolute right-0 top-1/2 -translate-y-1/2">
+                    <StarRating rating={book?.rating ?? 0} />
                 </div>
-                )}
             </div>
 
             {/* Selection bar for Descripcion / Author / Criticas */}

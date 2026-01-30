@@ -8,13 +8,13 @@ export const Profile = () => {
         id: "12345",
         email: "b.akyol26@ncf.edu",
         username: "bilge26",
-        picture_url: mockProfilePic,
+        avatar_url: mockProfilePic,
     };
 
     // setting profile picture for displaying
     const profile_picture =
-        (mockUser?.picture_url as string | undefined) ||
-        (mockUser?.user_metadata?.picture_url as string | undefined) ||
+        (mockUser?.avatar_url as string | undefined) ||
+        (mockUser?.user_metadata?.avatar_url as string | undefined) ||
         null;
     const displayProfilePicture = profile_picture || defaultAvatar;
     const displayName = mockUser?.username || mockUser?.user_metadata?.full_name || mockUser?.email || "usuario";

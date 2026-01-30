@@ -1,11 +1,11 @@
 .navbar {
-  display: flex;
+  display: flex; /* existing styles */
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: white;
-  color: white;
-  border-bottom: 1px solid black; /* black border line */
+  padding: 0 2rem;
+  height: 64px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .navbar-logo .logo-img {
@@ -18,7 +18,6 @@
   display: flex;
   gap: 1rem;
 }
-
 
 .navbar-links a {
   text-decoration: none;
