@@ -18,6 +18,11 @@ export const Posts = () => {
         setPosts([post, ...posts]); // prepend new post to top
     };
 
+     // handler to update the UI after a post is deleted
+    const handlePostDeleted = (deletedPostId: string) => {
+        setPosts(prev => prev.filter(post => post.id !== deletedPostId));
+    };
+
     // const mockPosts: Post[] = [
     //     {
     //         id: "1",
@@ -46,10 +51,11 @@ export const Posts = () => {
     if (error) {
         return <p className="text-center text-sm text-red-500">{error}</p>;
     }
+
     if (posts.length === 0) {
         return (
             <p className="text-center text-sm text-gray-500">
-            No hay publicaciones todavía.
+                No hay publicaciones todavía.
             </p>
         );
     }
@@ -58,7 +64,10 @@ export const Posts = () => {
         <div className="max-w-3xl mx-auto p-4 space-y-4">
             <NewPostForm onPostCreated={handlePostCreated} />
             {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
+                <PostCard 
+                key={post.id} 
+                post={post} 
+                onDelete={handlePostDeleted}/> // the callback to update UI on deletion
             ))}
         </div>
     );

@@ -139,3 +139,13 @@ export const createPost = async ({
   return newPost;
 };
 
+export async function deletePost(postId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', postId)
+    .eq('user_id', userId); // users can only delete their own posts
+
+  if (error) throw error;
+}
+
