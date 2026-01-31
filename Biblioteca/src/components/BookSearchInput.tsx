@@ -90,14 +90,26 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
 
       <div className="relative">
         {searchResults.length > 0 && (
-            <ul className="border mt-1 max-h-48 overflow-y-auto bg-white dark:bg-neutral-900 rounded">
+            <ul className="absolute z-10 w-full border mt-1 max-h-48 overflow-y-auto bg-white dark:bg-neutral-900 rounded">
             {searchResults.map((book) => (
                 <li
-                key={book.id}
-                className="p-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-700"
-                onClick={() => handleSelect(book)}
-                >
-                {book.title} {book.author && `- ${book.author}`}
+                    key={book.id}
+                    className="p-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-700 flex items-center gap-3"
+                    onClick={() => handleSelect(book)}
+                    >
+                    <img
+                        src={book.coverUrl || "/default-book-cover.png"}
+                        alt={book.title}
+                        className="w-10 h-14 object-cover rounded"
+                        loading="lazy"
+                    />
+
+                    <div className="min-w-0">
+                        <div className="font-medium truncate">{book.title}</div>
+                        {book.author && (
+                        <div className="text-sm opacity-70 truncate">{book.author}</div>
+                        )}
+                    </div>
                 </li>
             ))}
             </ul>
