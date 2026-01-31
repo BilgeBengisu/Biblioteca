@@ -19,6 +19,7 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
   const [searchResults, setSearchResults] = useState<SearchBook[]>([]);
   const [selectedBook, setSelectedBook] = useState<SearchBook | null>(initialBook);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     setSelectedBook(initialBook);
@@ -56,15 +57,29 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
     setQuery(value);
     setSelectedBook(null);
     onBookSelect(null);
+  };
 
-    if (!value.trim()) {
-      setSearchResults([]);
-      return;
+  useEffect(() => {
+    if (!query.trim()) {
+        setSearchResults([]);
+        setHasSearched(false);
+        return;
     }
 
-    const results = await fetchBooks(value);
-    setSearchResults(results);
-  };
+    let cancelled = false;
+
+    const timeoutId = window.setTimeout(async () => {
+        setHasSearched(true);
+        const results = await fetchBooks(query);
+        if (!cancelled) setSearchResults(results);
+    }, 300);
+
+    return () => {
+        cancelled = true;
+        window.clearTimeout(timeoutId);
+    };
+  }, [query]);
+
 
   const handleSelect = (book: SearchBook) => {
     setSelectedBook(book);
@@ -114,8 +129,8 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
             ))}
             </ul>
         )}
-        {query.trim() && !isSearching && searchResults.length === 0 && (
-                <div className="text-sm opacity-70 mt-1">No results.</div>
+        {hasSearched && query.trim() && !isSearching && searchResults.length === 0 && (
+                <div className="text-sm opacity-70 mt-1">No resultados.</div>
         )}
       </div>
     
