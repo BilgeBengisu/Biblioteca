@@ -1,9 +1,8 @@
 import { PostCard } from "../components/PostCard";
-import { mockPosts } from "../data/mockPosts";
 import { getPosts } from "../services/posts";
 import type { Post } from "../types/Post";
 import { useEffect, useState } from "react";
-import { NewPostForm } from "../forms/NewPostForm";
+import { NewPostForm } from "../components/NewPostForm";
 
 export const Posts = () => {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -22,16 +21,6 @@ export const Posts = () => {
     const handlePostDeleted = (deletedPostId: string) => {
         setPosts(prev => prev.filter(post => post.id !== deletedPostId));
     };
-
-    // const mockPosts: Post[] = [
-    //     {
-    //         id: "1",
-    //         user_id: "123",
-    //         type: "text",
-    //         content: "Just started using Biblioteca 📚",
-    //         created_at: new Date().toISOString(),
-    //     },
-    // ];
 
     // getting posts from the service to display
     useEffect(() => {

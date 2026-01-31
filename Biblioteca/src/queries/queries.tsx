@@ -43,3 +43,11 @@ export const GET_BOOK_BY_SLUG = gql`
         }
     }
 `;
+
+export const SEARCH_BOOKS = gql`
+  query SearchBooks($query: String!, $perPage: Int, $page: Int) {
+    search(query: $query, query_type: "books", per_page: $perPage, page: $page) {
+      results
+    }
+  }
+`;

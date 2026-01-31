@@ -3,6 +3,27 @@ import default_avatar  from "../assets/default-avatar.svg";
 import { supabase } from "../supabase-client";
 import type { Post } from "../types/Post";
 
+
+// defining the input type for creating a post
+// this is a union type since the required fields differ based on post type
+// this secures type safety when using createPost()
+type CreatePostInput =
+  | {
+      type: "text";
+      content: string;
+      userBookId?: null;
+    }
+  | {
+      type: "status";
+      content: string;
+      userBookId: string;
+    }
+  | {
+      type: "review";
+      content: string;
+      userBookId: string;
+    };
+
 export async function getPosts(): Promise<Post[]> {
     // joining posts table with profiles and books in the query
     const { data, error } = await supabase
@@ -62,35 +83,33 @@ function mapPost(row: any): Post {
   };
 }
 
-export const createPost = async ({
-  type,
-  content,
-  bookId,
-}: {
-  type: "text" | "status" | "review";
-  content?: string;
-  bookId?: number | null;
-}): Promise<Post> => {
-  // Get the currently logged-in user
-  // this could be optimized by passing the user throughout the app once
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+export const createPost = async (
+    input: CreatePostInput
+    ): Promise<Post> => {
+    const { type, content } = input; // "text" | "status" | "review"
 
-  if (userError || !user) throw new Error("Not authenticated");
+    // Get the currently logged-in user
+    // TODO: maybe this could be optimized by passing the user throughout the app once
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
+    if (userError || !user) throw new Error("Not authenticated");
+
+    // insert into the posts table
+    const { data, error } = await supabase
     .from("posts")
     .insert([
       {
         type,
-        content: content || null,
-        book_id: bookId || null,
         user_id: user.id,
+        content,
+        user_book_id: type === "text" ? null : input.userBookId,
       },
     ])
-    .select(`
+    .select(
+      `
       *,
       profiles (
         id,
@@ -105,38 +124,13 @@ export const createPost = async ({
         slug,
         created_at
       )
-    `)
+    `
+    )
     .single();
 
-  if (error) throw error;
+    if (error) throw error;
 
-  // Map the joined users object to "author" for PostCard
-  // Map to Post type
-  const newPost: Post = {
-    id: data.id,
-    author: {
-      id: data.profiles.id,
-      username: data.profiles.username,
-      avatarUrl: data.profiles.avatar_url,
-    },
-    type: data.type,
-    content: data.content,
-    status: data.status ?? undefined,
-    book: data.books
-      ? {
-          id: data.books.id,
-          title: data.books.title,
-          author: data.books.author,
-          coverUrl: data.books.cover_url,
-          slug: data.books.slug ?? undefined,
-          created_at: data.books.created_at,
-        }
-    : undefined,
-    rating: data.rating ?? undefined,
-    created_at: data.created_at,
-  };
-
-  return newPost;
+    return mapPost(data);
 };
 
 export async function deletePost(postId: string, userId: string): Promise<void> {
