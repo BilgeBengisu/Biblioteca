@@ -1,5 +1,5 @@
 import { mockPosts } from "../data/mockPosts";
-import default_avatar  from "../assets/default-avatar.svg";
+import default_book_cover  from "../assets/default-book-cover.png";
 import { supabase } from "../supabase-client";
 import type { Post } from "../types/Post";
 
@@ -17,11 +17,15 @@ type CreatePostInput =
       type: "status";
       content: string;
       userBookId: string;
+      status: "want_to_read" | "reading" | "finished";
     }
   | {
       type: "review";
       content: string;
       userBookId: string;
+      rating?: number; // review posts can have ratings
+      // optional: we may or may not want to store status for review posts
+      status?: "want_to_read" | "reading" | "finished";
     };
 
 export async function getPosts(): Promise<Post[]> {
@@ -35,13 +39,10 @@ export async function getPosts(): Promise<Post[]> {
             username,
             avatar_url
         ),
-        books (
+        user_books (
             id,
-            title,
-            author,
-            cover_url,
-            slug,
-            created_at
+            book_id,
+            book_data
         )
         `)
         .order("created_at", { ascending: false });
@@ -58,6 +59,9 @@ export async function getPosts(): Promise<Post[]> {
 // mapping database row to Post type
 // this step is to convert the database to my UI objects
 function mapPost(row: any): Post {
+  const ub = row.user_books ?? null;
+  const bd = ub?.book_data ?? null;
+
   return {
     id: row.id,
     author: {
@@ -67,18 +71,27 @@ function mapPost(row: any): Post {
     },
     type: row.type,
     content: row.content,
+
+    // For status posts, the status should come from posts table and not from user_books
     status: row.status ?? undefined,
-    book: row.books
+
+    // Book is derived from cached snapshot in user_books.book_data
+    book: bd
       ? {
-          id: row.books.id,
-          title: row.books.title,
-          author: row.books.author,
-          coverUrl: row.books.cover_url,
-          slug: row.books.slug ?? undefined, // <- include slug here
-          created_at: row.books.created_at,
+          // keep your Post.book shape, but fill from snapshot
+          // id should prefer book_data's id, fallback to user_books.book_id
+          id: String(bd.id ?? ub?.book_id ?? ""),
+          title: bd.title ?? null,
+          author: bd.author ?? null,
+          coverUrl: bd.coverUrl ?? null,
+          slug: bd.slug ?? null,
+          created_at: row.created_at,
         }
       : undefined,
-    rating: row.rating ?? undefined,
+
+    // Rating should come from user_books (not posts)
+    rating: ub?.rating ?? undefined,
+
     created_at: row.created_at,
   };
 }
@@ -101,31 +114,28 @@ export const createPost = async (
     const { data, error } = await supabase
     .from("posts")
     .insert([
-      {
+        {
         type,
         user_id: user.id,
         content,
         user_book_id: type === "text" ? null : input.userBookId,
-      },
+        status: type === "status" ? input.status : input.type === "review" ? input.status ?? null : null,
+        rating: type === "review" ? input.rating : null,
+        },
     ])
-    .select(
-      `
-      *,
-      profiles (
-        id,
-        username,
-        avatar_url
-      ),
-      books (
-        id,
-        title,
-        author,
-        cover_url,
-        slug,
-        created_at
-      )
-    `
-    )
+    .select(`
+        *,
+        profiles (
+            id,
+            username,
+            avatar_url
+        ),
+        user_books (
+            id,
+            book_id,
+            book_data
+        )
+    `)
     .single();
 
     if (error) throw error;

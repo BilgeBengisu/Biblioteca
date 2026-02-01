@@ -7,6 +7,7 @@ export type SearchBook = {
   title: string;
   author?: string;
   coverUrl?: string;
+  slug?: string;
 };
 
 type BookSearchInputProps = {
@@ -44,6 +45,7 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
         title: book.title,
         author: book.contributions?.[0]?.author?.name || "Unknown",
         coverUrl: book.image?.url,
+        slug: book.slug, 
       }));
     } catch (err) {
       console.error("Error fetching books:", err);
@@ -61,6 +63,13 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
 
   useEffect(() => {
     if (!query.trim()) {
+        setSearchResults([]);
+        setHasSearched(false);
+        return;
+    }
+
+    // if user selected a book and the input matches it, don't search again
+    if (selectedBook && query.trim() === selectedBook.title.trim()) {
         setSearchResults([]);
         setHasSearched(false);
         return;
@@ -85,6 +94,7 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
     setSelectedBook(book);
     setQuery(book.title);
     setSearchResults([]);
+    setHasSearched(false);
     onBookSelect(book);
   };
 
@@ -129,7 +139,7 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
             ))}
             </ul>
         )}
-        {hasSearched && query.trim() && !isSearching && searchResults.length === 0 && (
+        {hasSearched && query.trim() && !isSearching && searchResults.length === 0 && !selectedBook && (
                 <div className="text-sm opacity-70 mt-1">No resultados.</div>
         )}
       </div>

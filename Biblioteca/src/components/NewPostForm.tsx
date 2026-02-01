@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Post } from "../types/Post";
 import { useNavigate } from "react-router-dom";
 import { createPost } from "../services/posts";
@@ -6,6 +6,7 @@ import { SEARCH_BOOKS } from "../queries/queries";
 import type { BookData } from "../types/Book";
 import { apolloClient } from "../contexts/ApolloClient.tsx";
 import { BookSearchInput, type SearchBook } from "./BookSearchInput";
+import { upsertUserBook } from "../services/userBooks";
 
 type NewPostFormProps = {
   onPostCreated: (post: Post) => void; // callback to add the new post to feed
@@ -18,6 +19,8 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
   const [userBookId, setUserBookId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedBook, setSelectedBook] = useState<SearchBook | null>(null);
+  const [status, setStatus] = useState<"want_to_read" | "reading" | "finished">("reading");
+
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,6 +34,7 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
         type,
         content,
         userBookId: type === "text" ? null : userBookId, // text posts don't have any associations with books
+        ...(type === "status" ? { status } : {}),
       });
 
       onPostCreated(newPost);
@@ -44,6 +48,21 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
       setIsSubmitting(false);
     }
   };
+
+  // whenever status or selectedBook changes, update userBookId
+  useEffect(() => {
+    if (type === "text") return;
+    if (!selectedBook) return;
+
+    (async () => {
+      try {
+        const userBook = await upsertUserBook({ book: selectedBook, status });
+        setUserBookId(userBook.id);
+      } catch (err) {
+        console.error("Error updating user_book status:", err);
+      }
+    })();
+  }, [status, selectedBook, type]);
 
   return (
     <form className="bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-sm space-y-3" 
@@ -78,12 +97,45 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
       {(type === "status" || type === "review") && (
         <BookSearchInput
           initialBook={selectedBook}
-          onBookSelect={(book) => {
+          onBookSelect={async (book) => {
             setSelectedBook(book);
-            // NOTE: this is TEMP until we create/lookup user_books.id
-            setUserBookId(book?.id ?? null); // for createPost
+
+            if (!book) {
+              setUserBookId(null);
+              return;
+            }
+
+            try {
+              const userBook = await upsertUserBook({ book, status });
+              setUserBookId(userBook.id); // uuid 
+            } catch (err) {
+              console.error("Error upserting user_book:", err);
+              setUserBookId(null);
+            }
           }}
         />
+      )}
+
+      {/* Include status selector for status update posts */}
+      {(type === "status") && (
+        <div className="flex gap-2">
+          {[
+            { label: "Quiero leer", value: "want_to_read" },
+            { label: "Leyendo", value: "reading" },
+            { label: "Leído", value: "finished" },
+          ].map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              className={`px-3 py-1 rounded-full border ${
+                status === s.value ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-neutral-800"
+              }`}
+              onClick={() => setStatus(s.value as typeof status)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
       )}
 
       {/* Content textarea */}

@@ -1,9 +1,9 @@
 import type { Post } from "../types/Post";
 import default_avatar from "../assets/default-avatar.svg";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
 import { deletePost } from "../services/posts";
+import { Link } from "react-router-dom";
 
 type PostCardProps = {
   post: Post;
@@ -15,7 +15,6 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
   const { user } = useAuth();
   // getting the mapping of the post that was fetched from supabase
   const { author, type, content, status, book, created_at } = post;
-  const navigate = useNavigate();
 
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -98,9 +97,9 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
 
             {/* Book display */}
             {book && (
-              <div
-                className="flex items-center gap-3 cursor-pointer"
-                onClick={() => book.slug && navigate(`/books/${book.slug}`)}
+              <Link
+                to={`/books/${book.slug}`}
+                className="flex items-center gap-3 hover:opacity-80"
               >
                 {book.coverUrl && (
                   <img
@@ -117,7 +116,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
                     </p>
                   )}
                 </div>
-              </div>
+              </Link>
             )}
             {/* Status or Review Content */}
             {content && <p className="text-sm">{content}</p>}
