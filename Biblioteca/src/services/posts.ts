@@ -64,38 +64,37 @@ function mapPost(row: any): Post {
 
   return {
     id: row.id,
-    author: {
-      id: row.profiles.id,
-      username: row.profiles.username,
-      avatarUrl: row.profiles.avatar_url,
-    },
     type: row.type,
-    content: row.content,
-
-    // For status posts, the status should come from posts table and not from user_books
-    status: row.status ?? undefined,
-
-    // Book is derived from cached snapshot in user_books.book_data
-    book: bd
-      ? {
-          // keep your Post.book shape, but fill from snapshot
-          // id should prefer book_data's id, fallback to user_books.book_id
-          id: String(bd.id ?? ub?.book_id ?? ""),
-          title: bd.title ?? null,
-          author: bd.author ?? null,
-          coverUrl: bd.coverUrl ?? null,
-          slug: bd.slug ?? null,
-          created_at: row.created_at,
-        }
-      : undefined,
-
-    // Rating should come from user_books (not posts)
-    rating: ub?.rating ?? undefined,
-
+    content: row.content ?? null,
     created_at: row.created_at,
+
+    // snapshot fields must come from posts to reflect the state at posting time
+    rating: row.rating ?? null,
+    status: row.status ?? null, // make sure your Post type includes status if you use it
+
+    author: {
+      id: row.profiles?.id ?? "",
+      username: row.profiles?.username ?? "Usuario",
+      avatarUrl: row.profiles?.avatar_url ?? null,
+    },
+
+    // book snapshot comes from user_books.book_data via posts.user_book_id
+    userBook: ub
+      ? {
+          id: ub.id,
+          bookId: ub.book_id,
+          bookData: {
+            title: bd?.title ?? "",
+            author: bd?.author ?? null,
+            coverUrl: bd?.coverUrl ?? null,
+            slug: bd?.slug ?? null,
+          },
+        }
+      : null,
   };
 }
 
+// this creates the post but also returns the full Post object with author and book data populated mapped for the UI
 export const createPost = async (
     input: CreatePostInput
     ): Promise<Post> => {
@@ -110,21 +109,32 @@ export const createPost = async (
 
     if (userError || !user) throw new Error("Not authenticated");
 
+    // row to insert to posts table
+    const rowToInsert = {
+        type,
+        user_id: user.id,
+        content: content ?? null,
+        user_book_id: type === "text" ? null : input.userBookId,
+        status:
+        type === "status"
+            ? input.status
+            : type === "review"
+            ? (input.status ?? null) // in case status is missing for review, will be null if not provided (it is finished by default)
+            : null,
+        rating: type === "review" ? (input.rating ?? null) : null, // snapshot rating on post
+    };
+
     // insert into the posts table
     const { data, error } = await supabase
     .from("posts")
-    .insert([
-        {
-        type,
-        user_id: user.id,
-        content,
-        user_book_id: type === "text" ? null : input.userBookId,
-        status: type === "status" ? input.status : input.type === "review" ? input.status ?? null : null,
-        rating: type === "review" ? input.rating : null,
-        },
-    ])
+    .insert([rowToInsert])
     .select(`
-        *,
+        id,
+        type,
+        content,
+        status,
+        rating,
+        created_at,
         profiles (
             id,
             username,

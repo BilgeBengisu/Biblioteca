@@ -9,7 +9,7 @@ export type UserBookStatus = "want_to_read" | "reading" | "finished";
 
 export async function upsertUserBook(params: {
   book: SearchBook;
-  status: UserBookStatus;
+  status?: UserBookStatus;
   rating?: number | null;
 }) {
   const {
@@ -22,6 +22,8 @@ export async function upsertUserBook(params: {
   const bookId = Number(params.book.id);
   if (!Number.isInteger(bookId)) throw new Error(`Book id must be an integer: ${params.book.id}`);
 
+  // this is to store a book snapshot for books that the app displays often (such as on posts page)
+  // so we don't have to query the books api every time
   const snapshot = {
     id: bookId,
     title: params.book.title,
@@ -30,16 +32,21 @@ export async function upsertUserBook(params: {
     slug: params.book.slug ?? null,
   };
 
-  const payload: any = {
+  // fields that are always updated
+  const payload: Record<string, any> = {
     user_id: user.id,
     book_id: bookId,
-    status: params.status,
     book_data: snapshot,
     updated_at: new Date().toISOString(),
   };
 
-  // only write rating if provided (so status posts don’t overwrite rating)
+  // fields that are conditionally updated and shouldn't overwrite existing data otherwise
+  if (params.status !== undefined) payload.status = params.status;
   if (params.rating !== undefined) payload.rating = params.rating;
+
+  // only write rating if provided (so posts don’t overwrite rating and reading status)
+  if (params.rating !== undefined) payload.rating = params.rating;
+  if (params.status !== undefined) payload.status = params.status;
 
   const { data, error } = await supabase
     .from("user_books")

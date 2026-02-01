@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
 import { deletePost } from "../services/posts";
 import { Link } from "react-router-dom";
+import { StarRating } from "./StarRating";
 
 type PostCardProps = {
   post: Post;
@@ -14,7 +15,9 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
   // getting the currently logged user
   const { user } = useAuth();
   // getting the mapping of the post that was fetched from supabase
-  const { author, type, content, status, book, created_at } = post;
+  const { author, type, content, status, userBook, created_at } = post;
+
+  const book = userBook?.bookData; // shorthand for easier access
 
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -25,7 +28,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
     try {
       setIsDeleting(true);
       await deletePost(post.id, user.id);
-      onDelete(post.id); // Notify parent component(posts page) about deletion
+      onDelete(post.id); // Notify parent component(posts page) about deletion - only after successful deletion
       alert('Publicación eliminada');
     } catch (error) {
       console.error(error);
@@ -80,7 +83,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
         {/* For status or review posts with book */}
         {(type === "status" || type === "review") && (
           <div className="flex flex-col gap-2">
-            {/* Status */}
+            {/* Status Label */}
             {type === "status" && status && (
               <span className="font-semibold text-blue-600 dark:text-blue-400">
                 {status === "want_to_read" && "Quiere Leer"}
@@ -88,7 +91,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
                 {status === "finished" && "Leído"}
               </span>
             )}
-            {/* Status */}
+            {/* Review Label */}
             {type === "review" && (
               <span className="font-semibold text-blue-600 dark:text-blue-400">
                 Compartió sobre
@@ -100,6 +103,9 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
               <Link
                 to={`/books/${book.slug}`}
                 className="flex items-center gap-3 hover:opacity-80"
+                onClick={(e) => {
+                  if (!book.slug) e.preventDefault();
+                }}
               >
                 {book.coverUrl && (
                   <img
@@ -115,11 +121,27 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
                       por {book.author}
                     </p>
                   )}
+                  {/* Review rating snapshot (from post.rating) given by the user for the post */}
+                  {type === "review" && post.rating != null && (
+                    <div className="mt-2">
+                      <StarRating rating={post.rating} />
+                    </div>
+                  )}
                 </div>
               </Link>
             )}
             {/* Status or Review Content */}
-            {content && <p className="text-sm">{content}</p>}
+            {post.content && post.content.trim().length > 0 && (
+              <p className="text-sm text-neutral-800 dark:text-neutral-100 whitespace-pre-wrap">
+                {post.content}
+              </p>
+            )}
+            {/* Fallback: review rating if somehow no book_data came through */}
+            {type === "review" && !book && post.rating != null && (
+              <div className="mt-1">
+                <StarRating rating={post.rating} />
+              </div>
+            )}
           </div>
         )}
       </div>

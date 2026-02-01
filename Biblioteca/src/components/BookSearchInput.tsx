@@ -44,8 +44,8 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
         id: book.id,
         title: book.title,
         author: book.contributions?.[0]?.author?.name || "Unknown",
-        coverUrl: book.image?.url,
-        slug: book.slug, 
+        coverUrl: book.image?.url || "/default-book-cover.png",
+        slug: book.slug,
       }));
     } catch (err) {
       console.error("Error fetching books:", err);

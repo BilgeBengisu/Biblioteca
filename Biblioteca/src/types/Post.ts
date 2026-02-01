@@ -27,22 +27,32 @@ export interface PostBook {
 
 export type PostType = "text" | "status" | "review";
 
-export interface Post {
+export type Post = {
   id: string;
+  type: "text" | "status" | "review";
+  content: string | null;
+  created_at: string;
+
+  rating?: number | null; // review snapshot for post - shouldn't come from user_books
+  status?: "want_to_read" | "reading" | "finished" | null; // status snapshot for post - shouldn't come from user_books and reflect the status at posting time
+
+  // book info (from user_books.book_data snapshot)
+  userBook?: {
+    id: string;
+    bookId: number;
+    bookData: {
+      title: string;
+      author: string | null;
+      coverUrl: string | null;
+      slug?: string | null;
+    };
+  } | null;
+
   author: {
     id: string;
     username: string;
-    avatarUrl?: string;
+    avatarUrl: string | null;
   };
-  type: "text" | "status" | "review";
-  content?: string;
-  status?: "want_to_read" | "reading" | "finished";
-  book?: {
-    id: number;
-    title: string;
-    coverUrl?: string;
-  };
-  created_at: string;
 }
 
 
