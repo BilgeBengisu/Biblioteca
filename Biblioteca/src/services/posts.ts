@@ -28,9 +28,12 @@ type CreatePostInput =
       status?: "want_to_read" | "reading" | "finished";
     };
 
-export async function getPosts(): Promise<Post[]> {
+// used by the posts and profile page (a userId is passed to display the posts by the profile that is being viewed)
+export async function getPosts(options: { userId?: string } = {}): Promise<Post[]> {
+    const { userId } = options;
+
     // joining posts table with profiles and books in the query
-    const { data, error } = await supabase
+    let query = supabase
         .from("posts")
         .select(`
         *,
@@ -46,6 +49,12 @@ export async function getPosts(): Promise<Post[]> {
         )
         `)
         .order("created_at", { ascending: false });
+
+    if (userId) {
+        query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         console.error(error);
@@ -162,4 +171,3 @@ export async function deletePost(postId: string, userId: string): Promise<void> 
 
   if (error) throw error;
 }
-

@@ -1,8 +1,9 @@
 import { ProfileTabs } from "./ProfileTabs";
 import { useMemo, useState } from "react";
 import type { UserBookRow } from "../types/Profile";
-import type { PostBook } from "../types/Post";
+import type { Post, PostBook } from "../types/Post";
 import { BookInlineCard } from "./BookInlineCard";
+import { PostCard } from "./PostCard";
 
 export type ProfileTab = "library" | "posts";
 type LibraryView = "want_to_read" | "reading" | "finished";
@@ -13,6 +14,10 @@ export const ProfileTabView = ({
   library,
   libraryLoading,
   libraryError,
+  posts,
+  postsLoading,
+  postsError,
+  onPostDeleted,
 }: {
   activeTab: ProfileTab;
   onChange: (tab: ProfileTab) => void;
@@ -23,6 +28,10 @@ export const ProfileTabView = ({
   };
   libraryLoading: boolean;
   libraryError: string | null;
+  posts: Post[];
+  postsLoading: boolean;
+  postsError: string | null;
+  onPostDeleted: (deletedPostId: string) => void;
 }) => {
   const [libraryView, setLibraryView] = useState<LibraryView>("reading");
 
@@ -123,9 +132,19 @@ export const ProfileTabView = ({
         ) : (
           <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
             <h2 className="text-lg font-semibold">Mis publicaciones</h2>
-            <p className="text-sm text-neutral-600 mt-2">
-              (Próximo paso) Cargaremos posts cuando abras esta pestaña.
-            </p>
+            <div className="mt-3 space-y-3">
+              {postsLoading ? (
+                <p className="text-sm text-neutral-600">Cargando publicaciones…</p>
+              ) : postsError ? (
+                <p className="text-sm text-red-600">{postsError}</p>
+              ) : posts.length === 0 ? (
+                <p className="text-sm text-neutral-600">No hay publicaciones todavía.</p>
+              ) : (
+                posts.map((post) => (
+                  <PostCard key={post.id} post={post} onDelete={onPostDeleted} />
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>

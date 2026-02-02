@@ -1,8 +1,10 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
 import type { ProfileRow, UserBookRow } from "../types/Profile";
+import type { Post } from "../types/Post";
 import { useState, useEffect, useMemo } from "react";
 import { getProfileById, getProfileByUsername, getUserBooksByUserId, updateProfileById } from "../services/profiles";
+import { getPosts } from "../services/posts";
 import { EditProfileForm } from "../components/EditProfileForm";
 import { ProfileTabView } from "../components/ProfileTabView";
 import { useParams } from "react-router-dom";
@@ -27,6 +29,10 @@ export const Profile = () => {
         reading: [],
         finished: [],
     });
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [postsLoading, setPostsLoading] = useState(false);
+    const [postsError, setPostsError] = useState<string | null>(null);
+    const [postsLoadedFor, setPostsLoadedFor] = useState<string | null>(null);
 
     // checking if the user is viewing their own profile
     const isOwnProfile = useMemo(() => {
@@ -58,6 +64,19 @@ export const Profile = () => {
         }
         })();
     }, [username, user]);
+
+    useEffect(() => {
+        if (!profile?.id) {
+            setPosts([]);
+            setPostsError(null);
+            setPostsLoadedFor(null);
+            return;
+        }
+
+        setPosts([]);
+        setPostsError(null);
+        setPostsLoadedFor(null);
+    }, [profile?.id]);
 
     // second useEffect to load library tab on mounting (the library tab is default)
     useEffect(() => {
@@ -91,6 +110,42 @@ export const Profile = () => {
             isMounted = false;
         };
     }, [user]);
+
+
+    // useEffect to load the posts by the user, is only called if the active tab 
+    useEffect(() => {
+        if (activeTab !== "posts") return;
+        if (!profile?.id) return;
+        // if posts have already been loaded, don't load again
+        if (postsLoadedFor === profile.id) return;
+
+        // using isMounted variable to avoid setting states 
+        // if the page is unmounted (navigated to a different page)
+        let isMounted = true;
+        setPostsLoading(true);
+        setPostsError(null);
+
+        getPosts({ userId: profile.id })
+            .then((data) => {
+                if (!isMounted) return;
+                setPosts(data);
+                setPostsLoadedFor(profile.id);
+            })
+            .catch((err) => {
+                console.error(err);
+                if (!isMounted) return;
+                setPostsError("No se pudieron cargar las publicaciones");
+            })
+            .finally(() => {
+                if (!isMounted) return;
+                setPostsLoading(false);
+            });
+
+        // if the page is unmounted, react runs this cleanup
+        return () => {
+            isMounted = false;
+        };
+    }, [activeTab, profile?.id, postsLoadedFor]);
 
     // If not logged in yet
     if (!user) {
@@ -210,6 +265,12 @@ export const Profile = () => {
                     library={library}
                     libraryLoading={libraryLoading}
                     libraryError={libraryError}
+                    posts={posts}
+                    postsLoading={postsLoading}
+                    postsError={postsError}
+                    onPostDeleted={(deletedPostId) => {
+                        setPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
+                    }}
                 />
             </div>
         </div>
