@@ -1,0 +1,201 @@
+import { useEffect, useState } from "react";
+import type { ProfileRow } from "../types/Profile";
+import { uploadAvatar } from "../services/storage";
+
+type EditProfileFormProps = {
+  profile: ProfileRow;
+  userId: string;
+  avatarBucket: string;
+  currentAvatarUrl: string | null;
+  onCancel: () => void;
+  onSaved: (updated: ProfileRow) => void;
+  updateProfile: (
+    userId: string,
+    updates: {
+      username: string | null;
+      bio: string | null;
+      reading_goal: number | null;
+      avatar_url?: string | null;
+    }
+  ) => Promise<ProfileRow>;
+};
+
+export const EditProfileForm = ({
+  profile,
+  userId,
+  avatarBucket,
+  currentAvatarUrl,
+  onCancel,
+  onSaved,
+  updateProfile,
+}: EditProfileFormProps) => {
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [readingGoal, setReadingGoal] = useState<string>("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Prefill when component mounts / profile changes
+  useEffect(() => {
+    setUsername(profile.username ?? "");
+    setBio(profile.bio ?? "");
+    setReadingGoal(profile.reading_goal != null ? String(profile.reading_goal) : "");
+    setErrorMsg(null);
+  }, [profile]);
+
+  // Handle avatar upload
+  const handleAvatarUpload = async () => {
+    if (!avatarFile) return;
+
+    setIsUploadingAvatar(true);
+    setErrorMsg(null);
+
+    try {
+        const { fullUrl } = await uploadAvatar(avatarBucket, userId, avatarFile);
+
+        const updated = await updateProfile(userId, {
+            username: username.trim() || null,
+            bio: bio.trim() || null,
+            reading_goal: readingGoal.trim() ? Number(readingGoal) : null,
+            avatar_url: fullUrl,
+        });
+
+        onSaved(updated);
+    } catch (e) {
+        const msg = e instanceof Error ? e.message : "Error al subir el avatar.";
+        setErrorMsg(msg);
+    } finally {
+        setIsUploadingAvatar(false);
+    }
+    };
+
+  // error messages for invalid inputs
+  const validate = () => {
+    if (username.trim().length > 0) {
+      const u = username.trim();
+      if (u.length < 3 || u.length > 30) return "El nombre de usuario debe tener entre 3 y 30 caracteres.";
+      if (!/^[a-zA-Z0-9_]+$/.test(u)) return "El nombre de usuario solo puede contener letras, números y guiones bajos.";
+    }
+    if (bio.length > 500) return "La biografía debe tener 500 caracteres o menos.";
+    if (readingGoal.trim().length > 0) {
+      const n = Number(readingGoal);
+      if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+        return "El objetivo de lectura debe ser un número entero (0 o más).";
+      }
+    }
+    return null;
+  };
+
+  const handleSave = async () => {
+    const validationError = validate();
+    if (validationError) {
+      setErrorMsg(validationError);
+      return;
+    }
+
+    setIsSaving(true);
+    setErrorMsg(null);
+
+    try {
+      const updated = await updateProfile(userId, {
+        username: username.trim().length ? username.trim() : null,
+        bio: bio.trim().length ? bio.trim() : null,
+        reading_goal: readingGoal.trim().length ? Number(readingGoal) : null,
+      });
+
+      onSaved(updated);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al guardar el perfil.";
+      setErrorMsg(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {errorMsg && (
+        <div className="text-sm text-red-600 border border-red-200 dark:border-red-900 rounded-lg p-2">
+          {errorMsg}
+        </div>
+      )}
+      <div className="space-y-2">
+        <label className="text-sm text-neutral-700 dark:text-neutral-200">Foto de Perfil</label>
+
+        <div className="flex items-center gap-3">
+
+            <div className="flex-1 space-y-2">
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)}
+                    className="block w-full text-sm"
+                />
+
+                <button
+                    type="button"
+                    onClick={handleAvatarUpload}
+                    disabled={!avatarFile || isUploadingAvatar || isSaving}
+                    className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50"
+                >
+                    {isUploadingAvatar ? "Subiendo…" : "Subir avatar"}
+                </button>
+            </div>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <label className="text-sm text-neutral-700 dark:text-neutral-200">Nombre de Usuario</label>
+        <input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="your_username"
+          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-800 bg-transparent px-3 py-2 text-sm"
+        />
+        <p className="text-xs text-neutral-500">3–30 caracteres. Solo letras, números y guiones bajos.</p>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-sm text-neutral-700 dark:text-neutral-200">Biografía</label>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder="Comparte sobre ti"
+          className="w-full min-h-[96px] rounded-lg border border-neutral-200 dark:border-neutral-800 bg-transparent px-3 py-2 text-sm"
+        />
+        <p className="text-xs text-neutral-500">{bio.length}/500</p>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-sm text-neutral-700 dark:text-neutral-200">Meta de Lectura</label>
+        <input
+          value={readingGoal}
+          onChange={(e) => setReadingGoal(e.target.value)}
+          inputMode="numeric"
+          placeholder="e.g. 20"
+          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-800 bg-transparent px-3 py-2 text-sm"
+        />
+        <p className="text-xs text-neutral-500">Numero de Libros</p>
+      </div>
+
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          onClick={onCancel}
+          disabled={isSaving}
+          className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50"
+        >
+          {isSaving ? "Guardando…" : "Guardar"}
+        </button>
+      </div>
+    </div>
+  );
+};

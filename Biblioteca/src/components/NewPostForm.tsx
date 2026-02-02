@@ -145,10 +145,8 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
       {/* Book selector for status/review */}
       {(type === "status" || type === "review") && (
         <BookSearchInput
-          initialBook={selectedBook}
-          onBookSelect={async (book) => {
-            setSelectedBook(book);
-          }}
+          value={selectedBook}
+          onChange={setSelectedBook}
         />
       )}
 

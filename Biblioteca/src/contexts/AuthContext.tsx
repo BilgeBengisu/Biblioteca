@@ -7,7 +7,6 @@ import type { User } from "@supabase/supabase-js/dist/index.cjs";
 interface AuthContextType {
     user: User | null; // user might not be signed in
     signInWithPassword: (email: string, password: string) => void;
-    signUpWithPassword: (email: string, password: string) => void;
     signInWithGoogle: () => void;
     signOut: () => void;
 }
@@ -38,27 +37,25 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
         };
     }, []);
 
-    const signInWithGoogle = () => {
+    const signInWithGoogle = async () => {
         supabase.auth.signInWithOAuth({
             provider: 'google',
         })
     };
 
-    const signInWithPassword = (email: string, password: string) => {
+    const signInWithPassword = async (email: string, password: string) => {
         supabase.auth.signInWithPassword({
             email,
             password,
         });
     };
 
-    const signUpWithPassword = (email: string, password: string) => {};
-
-    const signOut = () => {
+    const signOut = async () => {
         supabase.auth.signOut();
     };
 
     return (
-        <AuthContext.Provider value={{user, signInWithGoogle, signInWithPassword, signUpWithPassword, signOut}}>
+        <AuthContext.Provider value={{user, signInWithGoogle, signInWithPassword, signOut}}>
             {children}
         </AuthContext.Provider>
     )

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import './Register.css';
 
 export const Register = () => {
-    const { user, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth();
+    const { user, signInWithPassword, signInWithGoogle } = useAuth();
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -25,7 +25,7 @@ export const Register = () => {
                     return;
                 }
                 setLoading(true);
-                signUpWithPassword(email, password);
+                signInWithPassword(email, password);
                 setLoading(false);
             }}>
                 <label>

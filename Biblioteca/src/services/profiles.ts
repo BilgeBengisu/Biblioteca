@@ -1,0 +1,62 @@
+// read profile service: getProfileById
+// update profile service: updateProfileById
+
+import { supabase } from "../supabase-client";
+import type { ProfileRow } from "../types/Profile";
+
+export async function getProfileById(userId: string): Promise<ProfileRow | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, username, bio, avatar_url, reading_goal, created_at, updated_at")
+    .eq("id", userId)
+    .maybeSingle(); // in case profile does not exist
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function updateProfileById(
+  userId: string,
+  updates: Pick<ProfileRow, "username" | "bio" | "reading_goal" | "avatar_url">
+): Promise<ProfileRow> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      username: updates.username,
+      bio: updates.bio,
+      reading_goal: updates.reading_goal,
+      avatar_url: updates.avatar_url,
+    })
+    .eq("id", userId)
+    .select("id, username, bio, avatar_url, reading_goal, created_at, updated_at")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function uploadAvatar(
+  bucket: string,
+  userId: string,
+  file: File
+): Promise<{ fullUrl: string; path: string }> {
+  const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+  const filePath = `profile_pictures/${userId}/${crypto.randomUUID()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(filePath, file, {
+      upsert: true,
+      cacheControl: "3600",
+      contentType: file.type,
+    });
+
+  if (error) throw new Error(error.message);
+  
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+
+  return {fullUrl: data.publicUrl, path: filePath}; // only path to store in the database
+}

@@ -11,21 +11,23 @@ export type SearchBook = {
 };
 
 type BookSearchInputProps = {
-  onBookSelect: (book: SearchBook | null) => void; // callback when a book is selected
-  initialBook?: SearchBook | null;
+  value: SearchBook | null;
+  onChange: (book: SearchBook | null) => void; // callback when a book is selected
 };
 
-export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearchInputProps) => {
-  const [query, setQuery] = useState(initialBook?.title || "");
+export const BookSearchInput = ({ value, onChange }: BookSearchInputProps) => {
+  const [query, setQuery] = useState(""); // only for input field
   const [searchResults, setSearchResults] = useState<SearchBook[]>([]);
-  const [selectedBook, setSelectedBook] = useState<SearchBook | null>(initialBook);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
-    setSelectedBook(initialBook);
-    setQuery(initialBook?.title ?? "");
-  }, [initialBook]);
+    if (value) {
+        setQuery(""); // clear input when a book is selected
+        setSearchResults([]);
+        setHasSearched(false);
+    }
+  }, [value]);
 
   async function fetchBooks(query: string): Promise<SearchBook[]> {
     if (!query.trim()) return [];
@@ -38,15 +40,15 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
         fetchPolicy: "no-cache",
       });
 
-      const results = response?.data?.search?.results?.hits?.map((hit: any) => hit.document).filter(Boolean) as SearchBook[] || [];
+      const hits = response?.data?.search?.results?.hits?.map((hit: any) => hit.document).filter(Boolean) ?? [];
 
-      return results.map((book) => ({
+      return hits.map((book: any) => ({
         id: book.id,
         title: book.title,
         author: book.contributions?.[0]?.author?.name || "Unknown",
         coverUrl: book.image?.url || "/default-book-cover.png",
         slug: book.slug,
-      }));
+      })) as SearchBook[];
     } catch (err) {
       console.error("Error fetching books:", err);
       return [];
@@ -57,19 +59,14 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
 
   const handleChange = async (value: string) => {
     setQuery(value);
-    setSelectedBook(null);
-    onBookSelect(null);
+    setHasSearched(false);
+    // If user starts typing, clear selected book in parent component
+    if (value && query.trim().length > 0) onChange(null); // value = SearchBook
   };
 
+  // debounce search effect
   useEffect(() => {
     if (!query.trim()) {
-        setSearchResults([]);
-        setHasSearched(false);
-        return;
-    }
-
-    // if user selected a book and the input matches it, don't search again
-    if (selectedBook && query.trim() === selectedBook.title.trim()) {
         setSearchResults([]);
         setHasSearched(false);
         return;
@@ -91,59 +88,85 @@ export const BookSearchInput = ({ onBookSelect, initialBook = null }: BookSearch
 
 
   const handleSelect = (book: SearchBook) => {
-    setSelectedBook(book);
-    setQuery(book.title);
+    setQuery("");
     setSearchResults([]);
     setHasSearched(false);
-    onBookSelect(book);
+    onChange(book);
+  };
+
+  const handleClear = () => {
+    onChange(null);
+    setQuery("");
+    setSearchResults([]);
+    setHasSearched(false);
   };
 
   return (
     <div>
       <label className="block text-sm font-medium mb-1">Libro</label>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => handleChange(e.target.value)}
-        placeholder="Busca un libro..."
-        className="w-full border rounded p-2 dark:bg-neutral-800 dark:text-white"
-      />
 
-      {isSearching && (
-        <div className="text-sm opacity-70 mt-1">Buscando…</div>
-      )}
+      {value ? (
+        <div className="flex items-center gap-3 border rounded p-2 dark:bg-neutral-800 dark:text-white">
+          <img
+            src={value.coverUrl || "/default-book-cover.png"}
+            alt={value.title}
+            className="w-10 h-14 object-cover rounded"
+            loading="lazy"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium truncate">{value.title}</div>
+            {value.author && <div className="text-sm opacity-70 truncate">{value.author}</div>}
+            </div>
+            <button
+                type="button"
+                className="text-xs underline text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200"
+                onClick={handleClear}
+            >
+                Cambiar
+            </button>
+            </div>
+        ) : (
+            <>
+            <input
+                type="text"
+                value={query}
+                onChange={(e) => handleChange(e.target.value)}
+                placeholder="Busca un libro..."
+                className="w-full border rounded p-2 dark:bg-neutral-800 dark:text-white"
+            />
 
-      <div className="relative">
-        {searchResults.length > 0 && (
-            <ul className="absolute z-10 w-full border mt-1 max-h-48 overflow-y-auto bg-white dark:bg-neutral-900 rounded">
-            {searchResults.map((book) => (
-                <li
-                    key={book.id}
-                    className="p-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-700 flex items-center gap-3"
-                    onClick={() => handleSelect(book)}
+            {isSearching && <div className="text-sm opacity-70 mt-1">Buscando…</div>}
+
+            <div className="relative">
+                {searchResults.length > 0 && (
+                <ul className="absolute z-10 w-full border mt-1 max-h-48 overflow-y-auto bg-white dark:bg-neutral-900 rounded">
+                    {searchResults.map((book) => (
+                    <li
+                        key={book.id}
+                        className="p-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-700 flex items-center gap-3"
+                        onClick={() => handleSelect(book)}
                     >
-                    <img
+                        <img
                         src={book.coverUrl || "/default-book-cover.png"}
                         alt={book.title}
                         className="w-10 h-14 object-cover rounded"
                         loading="lazy"
-                    />
-
-                    <div className="min-w-0">
+                        />
+                        <div className="min-w-0">
                         <div className="font-medium truncate">{book.title}</div>
-                        {book.author && (
-                        <div className="text-sm opacity-70 truncate">{book.author}</div>
-                        )}
-                    </div>
-                </li>
-            ))}
-            </ul>
-        )}
-        {hasSearched && query.trim() && !isSearching && searchResults.length === 0 && !selectedBook && (
+                        {book.author && <div className="text-sm opacity-70 truncate">{book.author}</div>}
+                        </div>
+                    </li>
+                    ))}
+                </ul>
+                )}
+
+                {hasSearched && query.trim() && !isSearching && searchResults.length === 0 && (
                 <div className="text-sm opacity-70 mt-1">No resultados.</div>
+                )}
+            </div>
+            </>
         )}
-      </div>
-    
-    </div>
-  );
+        </div>
+    );
 };
