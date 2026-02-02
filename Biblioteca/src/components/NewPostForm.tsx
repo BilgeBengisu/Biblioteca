@@ -157,7 +157,7 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
           {[
             { label: "Quiero leer", value: "want_to_read" },
             { label: "Leyendo", value: "reading" },
-            { label: "Leído", value: "finished" },
+            { label: "Terminado", value: "finished" },
           ].map((s) => (
             <button
               key={s.value}
