@@ -8,6 +8,7 @@ import { Profile } from "./pages/Profile";
 import { Posts } from "./pages/Posts";
 import { Books } from "./pages/Books";
 import { BookView} from "./pages/BookView";
+import { AuthCallback } from "./pages/AuthCallBack";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/posts" element={<Posts/>} />
           <Route path="/books" element={<Books/>} />
           <Route path="/books/:id" element={<BookView />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="*" element={<h1>404 Not Found</h1>} />
         </Routes>
       </div>
