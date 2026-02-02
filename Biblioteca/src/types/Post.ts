@@ -47,6 +47,8 @@ export type Post = {
       slug?: string | null;
     };
   } | null;
+  like_count?: number | null;
+  liked_by_me?: boolean;
 
   author: {
     id: string;

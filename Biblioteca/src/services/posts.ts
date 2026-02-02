@@ -61,7 +61,44 @@ export async function getPosts(options: { userId?: string } = {}): Promise<Post[
         return [];
     }
 
-    return data.map(mapPost);
+    const posts = data.map(mapPost);
+
+    if (posts.length === 0) return posts;
+
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) {
+        console.error(userError);
+    }
+
+    const postIds = posts.map((post) => post.id);
+
+    const { data: likesData, error: likesError } = await supabase
+        .from("post_likes")
+        .select("post_id, user_id")
+        .in("post_id", postIds);
+
+    if (likesError) {
+        console.error(likesError);
+        return posts;
+    }
+
+    const likeCounts = new Map<string, number>();
+    const likedByMe = new Set<string>();
+
+    for (const like of likesData) {
+        likeCounts.set(like.post_id, (likeCounts.get(like.post_id) ?? 0) + 1);
+        if (user?.id && like.user_id === user.id) likedByMe.add(like.post_id);
+    }
+
+    return posts.map((post) => ({
+        ...post,
+        like_count: likeCounts.get(post.id) ?? 0,
+        liked_by_me: user?.id ? likedByMe.has(post.id) : false,
+    }));
 }
 
 
@@ -168,6 +205,25 @@ export async function deletePost(postId: string, userId: string): Promise<void> 
     .delete()
     .eq('id', postId)
     .eq('user_id', userId); // users can only delete their own posts
+
+  if (error) throw error;
+}
+
+// likes services
+export async function likePost(postId: string, userId: string) {
+  const { error } = await supabase
+    .from("post_likes")
+    .insert({ post_id: postId, user_id: userId });
+
+  if (error) throw error;
+}
+
+export async function unlikePost(postId: string, userId: string) {
+  const { error } = await supabase
+    .from("post_likes")
+    .delete()
+    .eq("post_id", postId)
+    .eq("user_id", userId);
 
   if (error) throw error;
 }
