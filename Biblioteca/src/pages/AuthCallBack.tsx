@@ -7,24 +7,26 @@ export const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleAuth = async () => {
+    const run = async () => { 
       const { data, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error("Auth callback error:", error);
-        navigate("/login");
+        console.error("getSession error:", error);
+        navigate("/login", { replace: true });
         return;
       }
 
-      if (data.session) {
-        navigate("/posts");
-      } else {
-        navigate("/login");
+      if (!data.session) {
+        console.error("No session after OAuth redirect");
+        navigate("/login", { replace: true });
+        return;
       }
+
+      navigate("/profile", { replace: true });
     };
 
-    handleAuth();
+    run();
   }, [navigate]);
 
-  return <p className="text-center mt-8">Iniciando sesión…</p>;
+  return <div className="p-6">Iniciando sesión…</div>;
 };

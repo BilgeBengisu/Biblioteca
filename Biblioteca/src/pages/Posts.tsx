@@ -1,8 +1,8 @@
-import { PostCard } from "../components/PostCard";
 import { getPosts } from "../services/posts";
 import type { Post } from "../types/Post";
 import { useEffect, useState } from "react";
 import { NewPostForm } from "../components/NewPostForm";
+import { PostCard } from "../components/PostCard";
 
 export const Posts = () => {
     const [posts, setPosts] = useState<Post[]>([]);
