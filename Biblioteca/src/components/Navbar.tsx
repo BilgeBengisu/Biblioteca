@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext.tsx";
 import default_avatar from "../assets/default-avatar.svg";
 
 export const Navbar = () => {
-    const { user, signInWithGoogle, signOut } = useAuth();
+    const { user, profile, signOut } = useAuth();
     return (
         <nav  className="navbar"> 
             <div>
@@ -28,7 +28,7 @@ export const Navbar = () => {
                             <Link to="/profile" className="profile-link">
                                 <img
                                     src={
-                                        (user?.profile?.avatar_url as string | undefined) ??
+                                        profile?.avatar_url ??
                                         (user?.user_metadata?.avatar_url as string | undefined) ??
                                         default_avatar
                                     }
@@ -43,9 +43,6 @@ export const Navbar = () => {
                     </>
                 ) : (
                     <>
-                        <li>
-                            <button onClick={signInWithGoogle}>Google</button>
-                        </li>
                         <li>
                             <Link to="/login">Entregar</Link>
                         </li>

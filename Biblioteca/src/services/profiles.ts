@@ -18,6 +18,18 @@ export async function getProfileById(userId: string): Promise<ProfileRow | null>
   return data;
 }
 
+// to get username for profile routes
+export async function getProfileByUsername(username: string): Promise<ProfileRow | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("username", username)
+    .single();
+
+  if (error) throw error;
+  return data as ProfileRow;
+}
+
 export async function updateProfileById(
   userId: string,
   updates: Pick<ProfileRow, "username" | "bio" | "reading_goal" | "avatar_url">

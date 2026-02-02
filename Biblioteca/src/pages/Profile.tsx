@@ -1,14 +1,15 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
 import type { ProfileRow, UserBookRow } from "../types/Profile";
-import { useState, useEffect } from "react";
-import { getProfileById, getUserBooksByUserId, updateProfileById } from "../services/profiles";
+import { useState, useEffect, useMemo } from "react";
+import { getProfileById, getProfileByUsername, getUserBooksByUserId, updateProfileById } from "../services/profiles";
 import { EditProfileForm } from "../components/EditProfileForm";
-import { ProfileTabs } from "../components/ProfileTabs";
 import { ProfileTabView } from "../components/ProfileTabView";
+import { useParams } from "react-router-dom";
 
 export const Profile = () => {
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
+    const { username } = useParams<{ username?: string }>();
 
     const [profile, setProfile] = useState<ProfileRow | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -27,32 +28,38 @@ export const Profile = () => {
         finished: [],
     });
 
+    // checking if the user is viewing their own profile
+    const isOwnProfile = useMemo(() => {
+        if (!user || !profile) return false;
+        return user.id === profile.id;
+    }, [user, profile]);
+
     useEffect(() => {
-        if (!user) return;
+        // If /profile (no username), the user is logged in and viewing their own profile
+        if (!username && !user) return;
 
-        let isMounted = true;
-
-        (async () => {
         setIsLoading(true);
         setErrorMsg(null);
 
+        (async () => {
         try {
-            const data = await getProfileById(user.id);
-            if (isMounted) setProfile(data);
+            const data = username
+            ? await getProfileByUsername(username)
+            : await getProfileById(user!.id)
+
+            setProfile(data);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Error al cargar el perfil.";
-            if (isMounted) setErrorMsg(message);
+            const message =
+            err instanceof Error ? err.message : "Error al cargar el perfil.";
+            setErrorMsg(message);
+            setProfile(null);
         } finally {
-            if (isMounted) setIsLoading(false);
+            setIsLoading(false);
         }
         })();
+    }, [username, user]);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [user]);
-
-    // second useEffect to load library on mounting (the library tab is default)
+    // second useEffect to load library tab on mounting (the library tab is default)
     useEffect(() => {
         if (!user) return;
 
@@ -83,43 +90,41 @@ export const Profile = () => {
         return () => {
             isMounted = false;
         };
-        }, [user]);
-
-
+    }, [user]);
 
     // If not logged in yet
     if (!user) {
         return (
-        <div className="max-w-3xl mx-auto p-6">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
-            <h1 className="text-2xl font-semibold tracking-tight">No registrado</h1>
-            <p className="text-sm text-neutral-600 mt-2">
-                Por favor, inicia sesión para ver tu perfil.
-            </p>
+            <div className="max-w-3xl mx-auto p-6">
+                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
+                    <h1 className="text-2xl font-semibold tracking-tight">No registrado</h1>
+                    <p className="text-sm text-neutral-600 mt-2">
+                        Por favor, inicia sesión para ver tu perfil.
+                    </p>
+                </div>
             </div>
-        </div>
         );
     }
 
     // Loading
     if (isLoading) {
         return (
-        <div className="max-w-3xl mx-auto p-6">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
-            <p className="text-sm text-neutral-600">Cargando perfil…</p>
+            <div className="max-w-3xl mx-auto p-6">
+                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
+                    <p className="text-sm text-neutral-600">Cargando perfil…</p>
+                </div>
             </div>
-        </div>
         );
     }
 
     // Error
     if (errorMsg) {
         return (
-        <div className="max-w-3xl mx-auto p-6">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-red-200 dark:border-red-900 p-6">
-            <p className="text-sm text-red-600">{errorMsg}</p>
+            <div className="max-w-3xl mx-auto p-6">
+                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-red-200 dark:border-red-900 p-6">
+                    <p className="text-sm text-red-600">{errorMsg}</p>
+                </div>
             </div>
-        </div>
         );
     }
 
@@ -169,6 +174,7 @@ export const Profile = () => {
                         onCancel={() => setIsEditing(false)}
                         onSaved={(updated) => {
                         setProfile(updated);
+                        void refreshProfile();
                         setIsEditing(false);
                         }}
                     />

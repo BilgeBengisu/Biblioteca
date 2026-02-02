@@ -24,6 +24,7 @@ function App() {
           <Route path="/books" element={<Books/>} />
           <Route path="/books/:id" element={<BookView />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/profile/:username" element={<Profile />} /> 
           <Route path="*" element={<h1>404 Not Found</h1>} />
         </Routes>
       </div>

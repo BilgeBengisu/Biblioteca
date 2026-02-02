@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "../supabase-client";
 import type { User, AuthError } from "@supabase/supabase-js";
+import type { ProfileRow } from "../types/Profile";
+import { getProfileById } from "../services/profiles";
 
 type SignUpProfile = {
   username?: string;
@@ -9,23 +11,55 @@ type SignUpProfile = {
 
 interface AuthContextType {
   user: User | null;
+  profile: ProfileRow | null;
   loading: boolean;
 
   signInWithPassword: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUpWithPassword: (
-    email: string,
-    password: string,
-    profile?: SignUpProfile
-  ) => Promise<{ error: AuthError | null }>;
+  signUpWithPassword: (email: string, password: string, profile?: SignUpProfile) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+  // this gives profile request a unique ticket number
+  // useRef is preferable over useState because it doesn't trigger a re-render at every increment 
+  // and stays stable across renders 
+  const profileRequestId = useRef(0); 
+
+  const loadProfileForUser = async (currentUser: User | null) => {
+    // this line marks the async call (no two calls share the same id and the latest one is prefered)
+    // the conditional check profileRequestId.current === requestId makes the older requestId outdated
+    const requestId = ++profileRequestId.current;
+
+    if (!currentUser) {
+      setProfile(null);
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const data = await getProfileById(currentUser.id);
+      if (profileRequestId.current === requestId) {
+        setProfile(data);
+      }
+    } catch (error) {
+      if (profileRequestId.current === requestId) {
+        setProfile(null);
+      }
+      console.error("Error loading profile:", error);
+    } finally {
+      if (profileRequestId.current === requestId) {
+        setProfileLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     // load initial user
@@ -34,15 +68,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user ?? null);
-      setLoading(false);
+      await loadProfileForUser(user ?? null);
+      setAuthLoading(false);
     };
 
     init();
 
     // listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      const nextUser = session?.user ?? null;
+      setUser(nextUser);
+      void loadProfileForUser(nextUser);
+      setAuthLoading(false);
     });
 
     return () => {
@@ -94,15 +131,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
-  return (
+  const refreshProfile = async () => {
+    await loadProfileForUser(user);
+  };
+
+  return ( // exporting the context Provider
     <AuthContext.Provider
       value={{
         user,
-        loading,
+        profile,
+        loading: authLoading || profileLoading,
         signInWithGoogle,
         signInWithPassword,
         signUpWithPassword,
         signOut,
+        refreshProfile,
       }}
     >
       {children}
