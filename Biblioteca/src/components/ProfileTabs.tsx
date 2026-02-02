@@ -1,4 +1,4 @@
-type ProfileTab = "library" | "posts";
+import type { ProfileTab } from "../types/Profile";
 
 export const ProfileTabs = ({
   activeTab,

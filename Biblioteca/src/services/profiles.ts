@@ -2,7 +2,7 @@
 // update profile service: updateProfileById
 
 import { supabase } from "../supabase-client";
-import type { ProfileRow } from "../types/Profile";
+import type { ProfileRow, UserBookRow, UserBookStatus } from "../types/Profile";
 
 export async function getProfileById(userId: string): Promise<ProfileRow | null> {
   const { data, error } = await supabase
@@ -60,3 +60,15 @@ export async function uploadAvatar(
 
   return {fullUrl: data.publicUrl, path: filePath}; // only path to store in the database
 }
+
+export async function getUserBooksByUserId(userId: string): Promise<UserBookRow[]> {
+  const { data, error } = await supabase
+    .from("user_books")
+    .select("*")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as UserBookRow[];
+}
+

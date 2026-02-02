@@ -1,10 +1,11 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
-import type { ProfileRow } from "../types/Profile";
+import type { ProfileRow, UserBookRow } from "../types/Profile";
 import { useState, useEffect } from "react";
-import { getProfileById, updateProfileById } from "../services/profiles";
+import { getProfileById, getUserBooksByUserId, updateProfileById } from "../services/profiles";
 import { EditProfileForm } from "../components/EditProfileForm";
 import { ProfileTabs } from "../components/ProfileTabs";
+import { ProfileTabView } from "../components/ProfileTabView";
 
 export const Profile = () => {
     const { user } = useAuth();
@@ -14,6 +15,17 @@ export const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<"library" | "posts">("library");
+    const [libraryLoading, setLibraryLoading] = useState(false);
+    const [libraryError, setLibraryError] = useState<string | null>(null);
+    const [library, setLibrary] = useState<{
+        want_to_read: UserBookRow[];
+        reading: UserBookRow[];
+        finished: UserBookRow[];
+    }>({
+        want_to_read: [],
+        reading: [],
+        finished: [],
+    });
 
     useEffect(() => {
         if (!user) return;
@@ -39,6 +51,41 @@ export const Profile = () => {
             isMounted = false;
         };
     }, [user]);
+
+    // second useEffect to load library on mounting (the library tab is default)
+    useEffect(() => {
+        if (!user) return;
+
+        let isMounted = true;
+
+        (async () => {
+            setLibraryLoading(true);
+            setLibraryError(null);
+
+            try {
+            const rows = await getUserBooksByUserId(user.id);
+
+            const grouped = {
+                want_to_read: rows.filter((r) => r.status === "want_to_read"),
+                reading: rows.filter((r) => r.status === "reading"),
+                finished: rows.filter((r) => r.status === "finished"),
+            };
+
+            if (isMounted) setLibrary(grouped);
+            } catch (err) {
+            const message = err instanceof Error ? err.message : "Error al cargar la biblioteca.";
+            if (isMounted) setLibraryError(message);
+            } finally {
+            if (isMounted) setLibraryLoading(false);
+            }
+        })();
+
+        return () => {
+            isMounted = false;
+        };
+        }, [user]);
+
+
 
     // If not logged in yet
     if (!user) {
@@ -149,26 +196,16 @@ export const Profile = () => {
         </div>
 
         {/* Tabs */}
-        <div className="mt-6">
-            <ProfileTabs activeTab={activeTab} onChange={setActiveTab} />
-        </div>
-        {/* Tab content (placeholder for now) */}
         <div className="mt-4">
-            {activeTab === "library" ? (
-                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
-                    <h2 className="text-lg font-semibold">Mi biblioteca</h2>
-                    <p className="text-sm text-neutral-600 mt-2">
-                        (Próximo paso) Quiero leer / Leyendo / Terminado.
-                    </p>
-                </div>
-            ) : (
-                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
-                    <h2 className="text-lg font-semibold">Mis posts</h2>
-                    <p className="text-sm text-neutral-600 mt-2">
-                        (Próximo paso) Aquí cargaremos posts cuando abras esta pestaña.
-                    </p>
-                </div>
-            )}
+            <div className="mt-6">
+                <ProfileTabView
+                    activeTab={activeTab}
+                    onChange={setActiveTab}
+                    library={library}
+                    libraryLoading={libraryLoading}
+                    libraryError={libraryError}
+                />
+            </div>
         </div>
     </div>
   );
