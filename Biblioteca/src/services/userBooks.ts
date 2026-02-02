@@ -44,10 +44,6 @@ export async function upsertUserBook(params: {
   if (params.status !== undefined) payload.status = params.status;
   if (params.rating !== undefined) payload.rating = params.rating;
 
-  // only write rating if provided (so posts don’t overwrite rating and reading status)
-  if (params.rating !== undefined) payload.rating = params.rating;
-  if (params.status !== undefined) payload.status = params.status;
-
   const { data, error } = await supabase
     .from("user_books")
     .upsert(payload, { onConflict: "user_id,book_id" })

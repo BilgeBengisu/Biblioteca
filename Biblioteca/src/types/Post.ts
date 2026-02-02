@@ -17,12 +17,12 @@ export interface PostRow {
   created_at: string;
 }
 
-
 export interface PostBook {
   id: number;
   title: string;
   author: string;
   coverUrl: string | null;
+  slug?: string | null;
 }
 
 export type PostType = "text" | "status" | "review";

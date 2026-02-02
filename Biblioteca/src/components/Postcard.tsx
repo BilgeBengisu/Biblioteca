@@ -5,6 +5,7 @@ import { useState } from "react";
 import { deletePost } from "../services/posts";
 import { Link } from "react-router-dom";
 import { StarRating } from "./StarRating";
+import { BookInlineCard } from "./BookInlineCard";
 
 type PostCardProps = {
   post: Post;
@@ -100,35 +101,12 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
 
             {/* Book display */}
             {book && (
-              <Link
-                to={`/books/${book.slug}`}
-                className="flex items-center gap-3 hover:opacity-80"
-                onClick={(e) => {
-                  if (!book.slug) e.preventDefault();
-                }}
-              >
-                {book.coverUrl && (
-                  <img
-                    src={book.coverUrl}
-                    alt={book.title}
-                    className="w-20 h-28 object-cover rounded shadow-sm"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-lg truncate">{book.title}</h3>
-                  {book.author && (
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      por {book.author}
-                    </p>
-                  )}
-                  {/* Review rating snapshot (from post.rating) given by the user for the post */}
-                  {type === "review" && post.rating != null && (
-                    <div className="mt-2">
-                      <StarRating rating={post.rating} />
-                    </div>
-                  )}
-                </div>
-              </Link>
+              <BookInlineCard
+                book={book}
+                rightSlot={
+                  type === "review" && post.rating != null ? <StarRating rating={post.rating} /> : null
+                }
+              />
             )}
             {/* Status or Review Content */}
             {post.content && post.content.trim().length > 0 && (

@@ -1,5 +1,7 @@
 import { ProfileTabs } from "./ProfileTabs";
 import type { UserBookRow } from "../services/userBooks";
+import type { PostBook } from "../types/Post";
+import { BookInlineCard } from "./BookInlineCard";
 
 export type ProfileTab = "library" | "posts";
 
@@ -40,40 +42,27 @@ export const ProfileTabView = ({
             ) : libraryError ? (
               <p className="text-sm text-red-600">{libraryError}</p>
             ) : (
-              <div className="space-y-6">
-                <section>
-                  <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Quiero leer</h3>
-                  <ul className="mt-2 space-y-2">
-                    {library.want_to_read.map((ub) => (
-                      <li key={ub.id} className="text-sm text-neutral-700 dark:text-neutral-200">
-                        {ub.book_data?.title ?? `Book ${ub.book_id}`}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+                <div>
+                    {library.want_to_read.map((ub) => {
+                        const book = ub.book_data as PostBook | null;
+                        if (!book) return null;
 
-                <section>
-                  <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Leyendo</h3>
-                  <ul className="mt-2 space-y-2">
-                    {library.reading.map((ub) => (
-                      <li key={ub.id} className="text-sm text-neutral-700 dark:text-neutral-200">
-                        {ub.book_data?.title ?? `Book ${ub.book_id}`}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-
-                <section>
-                  <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Terminado</h3>
-                  <ul className="mt-2 space-y-2">
-                    {library.finished.map((ub) => (
-                      <li key={ub.id} className="text-sm text-neutral-700 dark:text-neutral-200">
-                        {ub.book_data?.title ?? `Book ${ub.book_id}`}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              </div>
+                        return (
+                            <li key={ub.id}>
+                            <BookInlineCard
+                                book={book}
+                                rightSlot={
+                                ub.status === "finished" && ub.rating != null ? (
+                                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                                    Tu calificación: {ub.rating}/5
+                                    </span>
+                                ) : null
+                                }
+                            />
+                            </li>
+                        );
+                    })}
+                </div>
             )}
           </div>
         ) : (
