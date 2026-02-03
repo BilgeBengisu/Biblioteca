@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { NewPostForm } from "../components/NewPostForm";
 import { PostCard } from "../components/PostCard";
 import { useAuth } from "../contexts/AuthContext";
+import { PostCardSkeleton } from "../components/PostCardSkeleton";
 
 export const Posts = () => {
     const { user } = useAuth();
@@ -12,6 +13,19 @@ export const Posts = () => {
     // loading and error states for more responsive UI
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [loadingPosts, setLoadingPosts] = useState<boolean>(true);
+
+    type FeedFilter = "all" | "following";
+    const [filter, setFilter] = useState<FeedFilter>("all");
+    const feedLabel = (v: FeedFilter) => {
+        switch (v) {
+            case "all":
+            return "Todos";
+            case "following":
+            return "Siguiendo";
+        }
+    };
+
 
     // handler to add newly created post to the posts list
     // this updates the ui without refetching all posts
@@ -28,29 +42,41 @@ export const Posts = () => {
 
     // getting posts from the service to display
     useEffect(() => {
-        getPosts()
-        .then(setPosts)
-        .catch((err) => {
-            console.error(err);
-            setError("No se pudieron cargar las publicaciones");
+        let cancelled = false;
+
+        setLoadingPosts(true);
+        setError(null);
+
+        getPosts({
+            feed: filter,        // "all" | "following"
+            viewerId: user?.id,  // needed for following feed (also used for "include me")
         })
-        .finally(() => setLoading(false));
-    }, []);
+            .then((data) => {
+            if (cancelled) return;
+            setPosts(data);
+            })
+            .catch((err) => {
+            console.error(err);
+            if (cancelled) return;
+            setError("No se pudieron cargar las publicaciones");
+            })
+            .finally(() => {
+            if (cancelled) return;
+            setLoading(false);
+            setLoadingPosts(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [filter, user?.id]);
 
     if (loading) {
-        return <p className="text-center text-sm text-gray-500">Cargando publicaciones…</p>;
+        return <p className="text-center text-sm text-gray-500">Cargando publicaciones</p>;
     }
-
+    
     if (error) {
         return <p className="text-center text-sm text-red-500">{error}</p>;
-    }
-
-    if (posts.length === 0) {
-        return (
-            <p className="text-center text-sm text-gray-500">
-                No hay publicaciones todavía.
-            </p>
-        );
     }
 
     // handling the like on Postcard
@@ -91,6 +117,42 @@ export const Posts = () => {
     return (
         <div className="max-w-3xl mx-auto p-4 space-y-4">
             <NewPostForm onPostCreated={handlePostCreated} />
+            <div className="flex justify-between items-center">
+                <div className="flex gap-2">
+                    <div className="inline-flex rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-1">
+                    {(["all", "following"] as const).map((v) => {
+                        const active = filter === v;
+
+                        return (
+                        <button
+                            key={v}
+                            type="button"
+                            onClick={() => setFilter(v)}
+                            disabled={v === "following" && !user}
+                            className={[
+                            "px-4 py-2 text-sm rounded-lg transition",
+                            active
+                                ? "bg-neutral-100 dark:bg-neutral-800 font-medium"
+                                : "hover:bg-neutral-50 dark:hover:bg-neutral-800",
+                            v === "following" && !user
+                                ? "opacity-50 cursor-not-allowed"
+                                : "",
+                            ].join(" ")}
+                        >
+                            {feedLabel(v)}
+                        </button>
+                        );
+                    })}
+                    </div>
+                </div>
+            </div>
+            {loadingPosts && ( // show skeleton while loading posts
+                <>
+                <PostCardSkeleton />
+                <PostCardSkeleton />
+                <PostCardSkeleton />
+                </>
+            )}
             {posts.map((post) => (
                 <PostCard 
                 key={post.id} 
@@ -98,6 +160,11 @@ export const Posts = () => {
                 onDelete={handlePostDeleted}
                 onToggleLike={handleToggleLike}/> // the callback to update UI on deletion
             ))}
+            {posts.length === 0 &&
+                <p className="text-center text-sm text-gray-500">
+                    No hay publicaciones todavía.
+                </p>
+            }
         </div>
     );
 };

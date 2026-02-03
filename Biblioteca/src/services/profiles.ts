@@ -7,7 +7,7 @@ import type { ProfileRow, UserBookRow, UserBookStatus } from "../types/Profile";
 export async function getProfileById(userId: string): Promise<ProfileRow | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, username, bio, avatar_url, reading_goal, created_at, updated_at")
+    .select("*")
     .eq("id", userId)
     .maybeSingle(); // in case profile does not exist
 
@@ -15,7 +15,7 @@ export async function getProfileById(userId: string): Promise<ProfileRow | null>
     throw new Error(error.message);
   }
 
-  return data;
+  return data as ProfileRow;
 }
 
 // to get username for profile routes

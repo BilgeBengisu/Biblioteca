@@ -2,23 +2,27 @@ import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
 import type { ProfileRow, UserBookRow } from "../types/Profile";
 import type { Post } from "../types/Post";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { getProfileById, getProfileByUsername, getUserBooksByUserId, updateProfileById } from "../services/profiles";
 import { getPosts } from "../services/posts";
 import { EditProfileForm } from "../components/EditProfileForm";
 import { ProfileTabView } from "../components/ProfileTabView";
 import { useParams } from "react-router-dom";
+import { FollowButton } from "../components/FollowButton";
+import { FollowCounts } from "../components/FollowCounts";
+
 
 export const Profile = () => {
     const { user, refreshProfile } = useAuth();
     const { username } = useParams<{ username?: string }>();
     // checking if the user is viewing their own profile
-    const isOwnProfile = !username && !!user; // If /profile (no username), the user is logged in and viewing their own profile
+    const isOwnProfile = !username || !!user; // If /profile (no username), the user is logged in and viewing their own profile
 
     const [profile, setProfile] = useState<ProfileRow | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [followRefreshKey, setFollowRefreshKey] = useState(0); // to refresh the follower count
     const [activeTab, setActiveTab] = useState<"library" | "posts">("library");
     const [libraryLoading, setLibraryLoading] = useState(false);
     const [libraryError, setLibraryError] = useState<string | null>(null);
@@ -36,6 +40,12 @@ export const Profile = () => {
     const [postsError, setPostsError] = useState<string | null>(null);
     const [postsLoadedFor, setPostsLoadedFor] = useState<string | null>(null);
 
+    // don't carry the refresh key for follower count to other profiles
+    useEffect(() => {
+        setFollowRefreshKey(0);
+    }, [profile?.id]);
+
+    // setting profile
     useEffect(() => {
         setIsLoading(true);
         setErrorMsg(null);
@@ -58,7 +68,7 @@ export const Profile = () => {
         })();
     }, [username, user]);
 
-    // second useEffect to load library tab on mounting (the library tab is default)
+    // useEffect to load library tab on mounting (the library tab is default)
     useEffect(() => {
         if (!user) return;
 
@@ -69,7 +79,8 @@ export const Profile = () => {
             setLibraryError(null);
 
             try {
-            const rows = await getUserBooksByUserId(user.id);
+            if (!profile?.id) return;
+            const rows = await getUserBooksByUserId(profile.id);
 
             const grouped = {
                 want_to_read: rows.filter((r) => r.status === "want_to_read"),
@@ -89,7 +100,7 @@ export const Profile = () => {
         return () => {
             isMounted = false;
         };
-    }, [user]);
+    }, [user, profile?.id]);
 
 
     // useEffect to load the posts by the user, is only called if the active tab is posts
@@ -166,14 +177,10 @@ export const Profile = () => {
     // Displaying profile
     const avatar =
         profile?.avatar_url ||
-        (user.user_metadata?.avatar_url as string | undefined) || // Supabase user info (OAuth Google populates user_metadata)
-        (user.user_metadata?.picture as string | undefined) ||
         defaultAvatar;
     // setting display name
     const displayName =
         profile?.username ||
-        (user.user_metadata?.full_name as string | undefined) ||
-        (user.user_metadata?.name as string | undefined) ||
         user.email ||
         "usuario";
 
@@ -187,7 +194,14 @@ export const Profile = () => {
             <div className="flex-1 min-w-0 space-y-2">
                 <div className="flex items-center justify-between gap-4">
                     <h1 className="text-2xl font-semibold tracking-tight truncate">{displayName}</h1>
-
+                    {profile?.id && !isOwnProfile && (
+                    <FollowButton
+                        viewerId={user.id}
+                        profileId={profile.id}
+                        isOwnProfile={isOwnProfile}
+                        onChanged={() => setFollowRefreshKey((k) => k + 1)}
+                    />
+                    )}
                     {isOwnProfile && !isEditing ? (
                     <button
                         onClick={() => setIsEditing(true)}
@@ -217,7 +231,15 @@ export const Profile = () => {
                 
                 {!isEditing && (
                     <>
+                        {isOwnProfile && ( // can't view email unless on your own profile
                         <p className="text-sm text-neutral-600 truncate">{user.email}</p>
+                        )}
+                        {profile?.id && 
+                        <FollowCounts 
+                            profileId={profile.id} 
+                            refreshKey={followRefreshKey} 
+                            className="mt-1" 
+                        />}
 
                         {profile?.bio && (
                         <p className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-pre-line">

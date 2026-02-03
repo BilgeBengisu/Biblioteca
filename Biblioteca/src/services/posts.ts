@@ -29,77 +29,110 @@ type CreatePostInput =
     };
 
 // used by the posts and profile page (a userId is passed to display the posts by the profile that is being viewed)
-export async function getPosts(options: { userId?: string } = {}): Promise<Post[]> {
-    const { userId } = options;
+export async function getPosts(
+  options: { userId?: string; feed?: "all" | "following"; viewerId?: string } = {}
+): Promise<Post[]> {
+  const { userId, feed = "all", viewerId } = options;
 
-    // joining posts table with profiles and books in the query
-    let query = supabase
-        .from("posts")
-        .select(`
-        *,
-        profiles (
-            id,
-            username,
-            avatar_url
-        ),
-        user_books (
-            id,
-            book_id,
-            book_data
-        )
-        `)
-        .order("created_at", { ascending: false });
+  // joining posts table with profiles and books in the query
+  let query = supabase
+    .from("posts")
+    .select(`
+      *,
+      profiles (
+        id,
+        username,
+        avatar_url
+      ),
+      user_books (
+        id,
+        book_id,
+        book_data
+      )
+    `)
+    .order("created_at", { ascending: false });
 
-    if (userId) {
-        query = query.eq("user_id", userId);
+  // Profile page case: show posts by a specific user
+  if (userId) {
+    query = query.eq("user_id", userId);
+  } else if (feed === "following") {
+    // Posts page "Following" feed case (includes me)
+    // viewerId is optional so existing calls don't break;
+    // but following feed needs it to work.
+    if (!viewerId) {
+      // no viewer => can't compute following feed; return empty 
+      return [];
     }
 
-    const { data, error } = await query;
+    // fetch ids I follow
+    const { data: followsData, error: followsError } = await supabase
+      .from("follows")
+      .select("followed_id")
+      .eq("follower_id", viewerId);
 
-    if (error) {
-        console.error(error);
-        return [];
+    if (followsError) {
+      console.error(followsError);
+      return [];
     }
 
-    const posts = data.map(mapPost);
+    // include me in the feed
+    const followingIds = Array.from(
+      new Set([viewerId, ...(followsData?.map((r) => r.followed_id) ?? [])])
+    );
 
-    if (posts.length === 0) return posts;
+    // filter posts
+    query = query.in("user_id", followingIds);
+  }
 
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
+  const { data, error } = await query;
 
-    if (userError) {
-        console.error(userError);
-    }
+  if (error) {
+    console.error(error);
+    return [];
+  }
 
-    const postIds = posts.map((post) => post.id);
+  const posts = data.map(mapPost);
 
-    const { data: likesData, error: likesError } = await supabase
-        .from("post_likes")
-        .select("post_id, user_id")
-        .in("post_id", postIds);
+  if (posts.length === 0) return posts;
 
-    if (likesError) {
-        console.error(likesError);
-        return posts;
-    }
+  // Keep your existing like enrichment logic as-is.
+  // (Optional improvement below: pass viewerId to avoid calling auth.getUser.)
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-    const likeCounts = new Map<string, number>();
-    const likedByMe = new Set<string>();
+  if (userError) {
+    console.error(userError);
+  }
 
-    for (const like of likesData) {
-        likeCounts.set(like.post_id, (likeCounts.get(like.post_id) ?? 0) + 1);
-        if (user?.id && like.user_id === user.id) likedByMe.add(like.post_id);
-    }
+  const postIds = posts.map((post) => post.id);
 
-    return posts.map((post) => ({
-        ...post,
-        like_count: likeCounts.get(post.id) ?? 0,
-        liked_by_me: user?.id ? likedByMe.has(post.id) : false,
-    }));
+  const { data: likesData, error: likesError } = await supabase
+    .from("post_likes")
+    .select("post_id, user_id")
+    .in("post_id", postIds);
+
+  if (likesError) {
+    console.error(likesError);
+    return posts;
+  }
+
+  const likeCounts = new Map<string, number>();
+  const likedByMe = new Set<string>();
+
+  for (const like of likesData) {
+    likeCounts.set(like.post_id, (likeCounts.get(like.post_id) ?? 0) + 1);
+    if (user?.id && like.user_id === user.id) likedByMe.add(like.post_id);
+  }
+
+  return posts.map((post) => ({
+    ...post,
+    like_count: likeCounts.get(post.id) ?? 0,
+    liked_by_me: user?.id ? likedByMe.has(post.id) : false,
+  }));
 }
+
 
 
 // mapping database row to Post type
