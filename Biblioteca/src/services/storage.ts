@@ -17,11 +17,17 @@ export async function uploadAvatar(
     .upload(filePath, file, {
       cacheControl: "3600",
       upsert: true,
-      contentType: file.type,
+      contentType: file.type || undefined,
     });
 
-  if (uploadError) throw new Error(uploadError.message);
+  if (uploadError) {
+    const isHeic = file.type === "image/heic" || file.type === "image/heif";
+    const hint = isHeic
+      ? " The bucket must allow image/heic (or convert to JPG/PNG)."
+      : "";
+    throw new Error(`${uploadError.message}${hint}`);
+  }
 
-  // filePath is useful for storing paths in the database - no need to store full public URL
-  return filePath ;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+  return { publicUrl: data.publicUrl, path: filePath };
 }

@@ -54,13 +54,13 @@ export const EditProfileForm = ({
     setErrorMsg(null);
 
     try {
-        const { fullUrl } = await uploadAvatar(avatarBucket, userId, avatarFile);
+        const { publicUrl } = await uploadAvatar(avatarBucket, userId, avatarFile);
 
         const updated = await updateProfile(userId, {
             username: username.trim() || null,
             bio: bio.trim() || null,
             reading_goal: readingGoal.trim() ? Number(readingGoal) : null,
-            avatar_url: fullUrl,
+            avatar_url: publicUrl,
         });
 
         onSaved(updated);
