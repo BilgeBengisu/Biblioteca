@@ -10,7 +10,7 @@ export async function uploadAvatar(
   file: File
 ): Promise<{ publicUrl: string; path: string }> {
   const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-  const filePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const filePath = `${userId}/${crypto.randomUUID()}.${ext}`; // stores each photo with a unique id
 
   const { error: uploadError } = await supabase.storage
     .from(bucket)

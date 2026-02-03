@@ -12,6 +12,8 @@ import { useParams } from "react-router-dom";
 export const Profile = () => {
     const { user, refreshProfile } = useAuth();
     const { username } = useParams<{ username?: string }>();
+    // checking if the user is viewing their own profile
+    const isOwnProfile = !username && !!user; // If /profile (no username), the user is logged in and viewing their own profile
 
     const [profile, setProfile] = useState<ProfileRow | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -34,16 +36,7 @@ export const Profile = () => {
     const [postsError, setPostsError] = useState<string | null>(null);
     const [postsLoadedFor, setPostsLoadedFor] = useState<string | null>(null);
 
-    // checking if the user is viewing their own profile
-    const isOwnProfile = useMemo(() => {
-        if (!user || !profile) return false;
-        return user.id === profile.id;
-    }, [user, profile]);
-
     useEffect(() => {
-        // If /profile (no username), the user is logged in and viewing their own profile
-        if (!username && !user) return;
-
         setIsLoading(true);
         setErrorMsg(null);
 
@@ -64,19 +57,6 @@ export const Profile = () => {
         }
         })();
     }, [username, user]);
-
-    useEffect(() => {
-        if (!profile?.id) {
-            setPosts([]);
-            setPostsError(null);
-            setPostsLoadedFor(null);
-            return;
-        }
-
-        setPosts([]);
-        setPostsError(null);
-        setPostsLoadedFor(null);
-    }, [profile?.id]);
 
     // second useEffect to load library tab on mounting (the library tab is default)
     useEffect(() => {
@@ -112,7 +92,7 @@ export const Profile = () => {
     }, [user]);
 
 
-    // useEffect to load the posts by the user, is only called if the active tab 
+    // useEffect to load the posts by the user, is only called if the active tab is posts
     useEffect(() => {
         if (activeTab !== "posts") return;
         if (!profile?.id) return;
@@ -208,7 +188,7 @@ export const Profile = () => {
                 <div className="flex items-center justify-between gap-4">
                     <h1 className="text-2xl font-semibold tracking-tight truncate">{displayName}</h1>
 
-                    {!isEditing ? (
+                    {isOwnProfile && !isEditing ? (
                     <button
                         onClick={() => setIsEditing(true)}
                         className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800"
