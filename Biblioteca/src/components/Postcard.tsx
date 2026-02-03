@@ -44,18 +44,27 @@ export const PostCard = ({ post, onDelete, onToggleLike }: PostCardProps) => {
     <article className="relative rounded-2xl bg-white p-4 shadow-sm space-y-3">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <img
-          src={author.avatarUrl ?? default_avatar}
-          alt={author.username}
-          className="h-10 w-10 rounded-full object-cover"
-        />
-        <div>
-          <p className="text-sm font-medium">{author.username}</p>
-          <span className="text-xs text-neutral-500">
-            {new Date(created_at).toLocaleDateString()}
-          </span>
-        </div>
+        <Link
+          to={`/profile/${author.username}`}
+          className="flex items-center gap-3"
+        >
+          <img
+            src={author.avatarUrl ?? default_avatar}
+            alt={author.username}
+            className="h-10 w-10 rounded-full object-cover"
+          />
+
+          <div>
+            <p className="text-sm font-medium hover:underline">
+              {author.username}
+            </p>
+          </div>
+        </Link>
+        <span className="text-xs text-neutral-500">
+          {new Date(created_at).toLocaleDateString()}
+        </span>
       </div>
+
       {/* Delete button for the postcard - only shows if the user is the author of the post */}
       {user?.id === author.id && (
         <button
