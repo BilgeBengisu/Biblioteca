@@ -186,7 +186,6 @@ export const Profile = () => {
     // setting display name
     const displayName =
         profile?.username ||
-        profile?.email ||
         "usuario";
 
     return (

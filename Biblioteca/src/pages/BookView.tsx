@@ -1,6 +1,5 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { static_books } from "../data/getBooks";
-import type { BookData } from "../types/Book";
+import { useParams } from "react-router-dom";
+import type { BooksData } from "../types/Book";
 import { useQuery } from "@apollo/client/react";
 import { GET_BOOK_BY_SLUG } from "../queries/queries";
 import { useState } from "react";
@@ -9,10 +8,10 @@ import { StarRating } from "../components/StarRating";
 export const BookView = () => {
     const { id } = useParams<{ id: string }>();
     // for returning to previous page
-    const navigate = useNavigate();
+    //const navigate = useNavigate();
 
     // finding the book to display using the id param (slug)
-    const { data, loading, error } = useQuery<BookData[]>(GET_BOOK_BY_SLUG, {
+    const { data, loading, error } = useQuery<BooksData>(GET_BOOK_BY_SLUG, {
         variables: { slug: id },
         skip: !id,
     });

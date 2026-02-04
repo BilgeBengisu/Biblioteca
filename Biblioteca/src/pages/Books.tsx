@@ -1,19 +1,17 @@
-import type { BookData } from '../types/Book';
-import {static_books} from '../data/getBooks';
+import type { BookData, BooksData } from '../types/Book';
 import { useNavigate } from 'react-router-dom';
 import { BookCard } from '../components/BookCard';
 import { useQuery } from '@apollo/client/react';
 import { GET_BOOKS } from '../queries/queries';
 import { useState } from 'react';
 import { BookCardSkeleton } from '../components/BookCardSkeleton';
-import { useEffect } from 'react';
 
 const SKELETON_COUNT = 10;
 
 export const Books: React.FC = () => {
     const navigate = useNavigate();
 
-    const { data, loading, error } = useQuery<BookData[]>(GET_BOOKS);
+    const { data, loading, error } = useQuery<BooksData>(GET_BOOKS);
 
     const [minRating, setMinRating] = useState(0);
 
@@ -25,7 +23,7 @@ export const Books: React.FC = () => {
         );
     }
 
-    const books = data?.books ?? [];
+    const books: BookData[] = data?.books ?? [];
 
     // filtering the books after they are fetched based on minimum rating
     const filteredBooks = books.filter(

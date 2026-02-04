@@ -16,7 +16,7 @@ export const Search = () => {
   const query = params.get("q") ?? "";
 
   // Live search: hook runs whenever scope/query changes
-  const { state, canSearch } = useSearch(scope, query);
+  const { state } = useSearch(scope, query);
 
   return (
     <main className="search-page">

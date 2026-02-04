@@ -1,5 +1,3 @@
-import { mockPosts } from "../data/mockPosts";
-import default_book_cover  from "../assets/default-book-cover.png";
 import { supabase } from "../supabase-client";
 import type { Post } from "../types/Post";
 

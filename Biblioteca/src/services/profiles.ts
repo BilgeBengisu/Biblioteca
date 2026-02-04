@@ -2,7 +2,7 @@
 // update profile service: updateProfileById
 
 import { supabase } from "../supabase-client";
-import type { ProfileRow, UserBookRow, UserBookStatus } from "../types/Profile";
+import type { ProfileRow, UserBookRow } from "../types/Profile";
 
 export async function getProfileById(userId: string): Promise<ProfileRow | null> {
   const { data, error } = await supabase
@@ -32,16 +32,28 @@ export async function getProfileByUsername(username: string): Promise<ProfileRow
 
 export async function updateProfileById(
   userId: string,
-  updates: Pick<ProfileRow, "username" | "bio" | "reading_goal" | "avatar_url">
+  updates: Pick<ProfileRow, "username" | "bio" | "reading_goal"> & {
+    avatar_url?: string | null;
+  }
 ): Promise<ProfileRow> {
+  const updatePayload: {
+    username: ProfileRow["username"];
+    bio: ProfileRow["bio"];
+    reading_goal: ProfileRow["reading_goal"];
+    avatar_url?: ProfileRow["avatar_url"];
+  } = {
+    username: updates.username,
+    bio: updates.bio,
+    reading_goal: updates.reading_goal,
+  };
+
+  if (updates.avatar_url !== undefined) { // avatar is optional
+    updatePayload.avatar_url = updates.avatar_url;
+  }
+
   const { data, error } = await supabase
     .from("profiles")
-    .update({
-      username: updates.username,
-      bio: updates.bio,
-      reading_goal: updates.reading_goal,
-      avatar_url: updates.avatar_url,
-    })
+    .update(updatePayload)
     .eq("id", userId)
     .select("id, username, bio, avatar_url, reading_goal, created_at, updated_at")
     .single();
@@ -83,4 +95,3 @@ export async function getUserBooksByUserId(userId: string): Promise<UserBookRow[
   if (error) throw new Error(error.message);
   return (data ?? []) as UserBookRow[];
 }
-
