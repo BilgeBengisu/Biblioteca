@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import type { BooksData } from "../types/Book";
 import { useQuery } from "@apollo/client/react";
 import { GET_BOOK_BY_SLUG } from "../queries/queries";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StarRating } from "../components/StarRating";
 import { PostCard } from "../components/Postcard";
 import { PostCardSkeleton } from "../components/PostCardSkeleton";
@@ -10,6 +10,7 @@ import type { Post } from "../types/Post";
 import { getPostsByBook } from "../services/posts";
 import { useAuth } from "../contexts/AuthContext";
 import { useToggleLike } from "../hooks/useToggleLike";
+import { BookStatusSelect } from "../components/BookStatusSelect";
 
 export const BookView = () => {
     const { id } = useParams<{ id: string }>();
@@ -46,6 +47,12 @@ export const BookView = () => {
         color: bookData.image?.color,
         authorBio: bookData.contributions?.[0]?.author?.bio,
     } : null;
+
+    const bookId = useMemo(() => {
+        const rawBookId = bookData?.id;
+        const parsed = rawBookId ? Number(rawBookId) : NaN;
+        return Number.isFinite(parsed) ? parsed : null;
+    }, [bookData?.id]);
     
     useEffect(() => {
         setCriticasPosts([]);
@@ -55,10 +62,8 @@ export const BookView = () => {
 
     useEffect(() => {
         if (selectedSection !== "criticas" || criticasLoaded) return;
-        if (!bookData?.id) return;
+        if (!bookId) return;
 
-        const rawBookId = bookData?.id;
-        const bookId = rawBookId ? Number(rawBookId) : NaN;
         if (!Number.isFinite(bookId)) {
             setCriticasError("No se pudieron cargar las críticas.");
             setCriticasLoaded(true);
@@ -88,13 +93,25 @@ export const BookView = () => {
         return () => {
             cancelled = true;
         };
-    }, [selectedSection, criticasLoaded, bookData?.id, user?.id]);
+    }, [selectedSection, criticasLoaded, bookId, user?.id]);
+
 
     const handleCriticaDeleted = (deletedPostId: string) => {
         setCriticasPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
     };
 
     const handleToggleLike = useToggleLike({ userId: user?.id, setPosts: setCriticasPosts });
+
+    const bookSnapshot = useMemo(() => {
+        if (!bookData || !bookId) return null;
+        return {
+            id: String(bookId),
+            title: bookData.title,
+            author: bookData.contributions?.[0]?.author?.name || "Autor desconocido",
+            coverUrl: bookData.image?.url || "/default-book-cover.png",
+            slug: bookData.slug,
+        };
+    }, [bookData, bookId]);
 
     // handle loading and error states
     if (loading) return <div>Cargando...</div>;
@@ -111,6 +128,11 @@ export const BookView = () => {
                     <div>
                         <h1 className="text-3xl font-bold">{book?.title}</h1>
                         <p className="text-lg text-gray-700 mt-2">por {book?.author}</p>
+                        <BookStatusSelect
+                            bookId={bookId}
+                            bookSnapshot={bookSnapshot}
+                            userId={user?.id}
+                        />
                     </div>
                 </div>
                 <div className="p-4 absolute right-0 top-1/2 -translate-y-1/2">

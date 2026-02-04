@@ -7,6 +7,62 @@ import type { SearchBook } from "../components/BookSearchInput";
 
 export type UserBookStatus = "want_to_read" | "reading" | "finished";
 
+export async function getUserBookByBookId(params: {
+  bookId: number;
+  userId?: string;
+}) {
+  let userId = params.userId;
+
+  if (!userId) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    userId = user?.id ?? undefined;
+  }
+
+  if (!userId) return null;
+
+  const { data, error } = await supabase
+    .from("user_books")
+    .select("id, status, rating, book_data")
+    .eq("user_id", userId)
+    .eq("book_id", params.bookId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ?? null;
+}
+
+export async function deleteUserBookByBookId(params: {
+  bookId: number;
+  userId?: string;
+}) {
+  let userId = params.userId;
+
+  if (!userId) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    userId = user?.id ?? undefined;
+  }
+
+  if (!userId) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("user_books")
+    .delete()
+    .eq("user_id", userId)
+    .eq("book_id", params.bookId);
+
+  if (error) throw error;
+}
+
 export async function upsertUserBook(params: {
   book: SearchBook;
   status?: UserBookStatus;
@@ -53,4 +109,3 @@ export async function upsertUserBook(params: {
   if (error) throw error;
   return data;
 }
-
