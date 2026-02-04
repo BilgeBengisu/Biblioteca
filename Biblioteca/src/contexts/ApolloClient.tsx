@@ -4,12 +4,7 @@ function createApolloClient() {
   // Apollo Client setup
   // auth link never changes, so everything is combined in one link
   const httpLink = new HttpLink({
-    uri: "https://api.hardcover.app/v1/graphql",
-    headers: {
-      authorization: import.meta.env.VITE_HARDCOVER_API_BEARER
-        ? `Bearer ${import.meta.env.VITE_HARDCOVER_API_BEARER}`
-        : "",
-    },
+    uri: "/api/hardcover",
   });
 
   const client = new ApolloClient({
