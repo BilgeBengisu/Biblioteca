@@ -1,31 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  deleteUserBookByBookId,
-  getUserBookByBookId,
-  upsertUserBook,
-  type UserBookStatus,
-} from "../services/userBooks";
-
-type BookSnapshot = {
-  id: string;
-  title: string;
-  author: string;
-  coverUrl: string;
-  slug?: string | null;
-};
-
-type BookStatusSelectProps = {
-  bookId: number | null;
-  bookSnapshot: BookSnapshot | null;
-  userId?: string;
-};
+import { getUserBookByBookId, upsertUserBook } from "../services/userBooks";
+import type { UserBookStatus, BookStatusSelectProps } from "../types/Book";
 
 export const BookStatusSelect = ({
   bookId,
   bookSnapshot,
   userId,
 }: BookStatusSelectProps) => {
-  const [userBookStatus, setUserBookStatus] = useState<UserBookStatus>("want_to_read");
+  const [userBookStatus, setUserBookStatus] = useState<UserBookStatus | "remove">("want_to_read");
   const [statusLoading, setStatusLoading] = useState<boolean>(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [hasUserBook, setHasUserBook] = useState<boolean>(false);
@@ -46,7 +28,7 @@ export const BookStatusSelect = ({
     getUserBookByBookId({ bookId, userId })
       .then((row) => {
         if (cancelled) return;
-        setUserBookStatus(row?.status ?? "want_to_read");
+        setUserBookStatus(row ? row.status ?? "remove" : "want_to_read");
         setHasUserBook(!!row);
       })
       .catch((err) => {
@@ -67,17 +49,14 @@ export const BookStatusSelect = ({
   const handleStatusChange = async (nextStatus: UserBookStatus | "remove") => {
     if (!bookId || !userId || !bookSnapshot) return;
 
-    if (nextStatus !== "remove") {
-      setUserBookStatus(nextStatus);
-    }
+    setUserBookStatus(nextStatus);
     setStatusLoading(true);
     setStatusError(null);
 
     try {
       if (nextStatus === "remove") {
-        await deleteUserBookByBookId({ bookId, userId });
-        setHasUserBook(false);
-        setUserBookStatus("want_to_read");
+        await upsertUserBook({ book: bookSnapshot, status: null }); // reset the reading status
+        setHasUserBook(true);
       } else {
         await upsertUserBook({ book: bookSnapshot, status: nextStatus });
         setHasUserBook(true);

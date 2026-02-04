@@ -6,7 +6,7 @@ import { GET_BOOKS } from '../queries/queries';
 import { useState } from 'react';
 import { BookCardSkeleton } from '../components/BookCardSkeleton';
 
-const SKELETON_COUNT = 10;
+const SKELETON_COUNT = 10; // number of book skeletons to show
 
 export const Books: React.FC = () => {
     const navigate = useNavigate();

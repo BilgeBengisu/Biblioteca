@@ -19,3 +19,19 @@ export interface BookData {
   rating?: number | null;
   description?: string;
 }
+
+export type BookSnapshot = {
+  id: string;
+  title: string;
+  author: string;
+  coverUrl: string;
+  slug?: string;
+};
+
+export type UserBookStatus = "want_to_read" | "reading" | "finished";
+
+export type BookStatusSelectProps = {
+  bookId: number | null;
+  bookSnapshot: BookSnapshot | null;
+  userId?: string;
+};

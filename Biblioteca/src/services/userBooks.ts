@@ -4,8 +4,7 @@
 
 import { supabase } from "../supabase-client";
 import type { SearchBook } from "../components/BookSearchInput";
-
-export type UserBookStatus = "want_to_read" | "reading" | "finished";
+import type { UserBookStatus } from "../types/Book";
 
 export async function getUserBookByBookId(params: {
   bookId: number;
@@ -65,7 +64,7 @@ export async function deleteUserBookByBookId(params: {
 
 export async function upsertUserBook(params: {
   book: SearchBook;
-  status?: UserBookStatus;
+  status?: UserBookStatus | null;
   rating?: number | null;
 }) {
   const {
