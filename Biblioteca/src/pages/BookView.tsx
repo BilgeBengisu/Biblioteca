@@ -26,13 +26,13 @@ export const BookView = () => {
 
     // filter view for sections
     const [selectedSection, setSelectedSection] = useState<
-        "descripcion" | "author" | "criticas"
+        "descripcion" | "author" | "posts"
     >("descripcion");
 
-    const [criticasPosts, setCriticasPosts] = useState<Post[]>([]);
-    const [criticasLoading, setCriticasLoading] = useState<boolean>(false);
-    const [criticasError, setCriticasError] = useState<string | null>(null);
-    const [criticasLoaded, setCriticasLoaded] = useState<boolean>(false);
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [postsLoading, setPostsLoading] = useState<boolean>(false);
+    const [postsError, setPostsError] = useState<string | null>(null);
+    const [postsLoaded, setPostsLoaded] = useState<boolean>(false);
 
     const bookData = data?.books?.[0];
 
@@ -55,52 +55,52 @@ export const BookView = () => {
     }, [bookData?.id]);
     
     useEffect(() => {
-        setCriticasPosts([]);
-        setCriticasError(null);
-        setCriticasLoaded(false);
+        setPosts([]);
+        setPostsError(null);
+        setPostsLoaded(false);
     }, [bookData?.id]);
 
     useEffect(() => {
-        if (selectedSection !== "criticas" || criticasLoaded) return;
+        if (selectedSection !== "posts" || postsLoaded) return;
         if (!bookId) return;
 
         if (!Number.isFinite(bookId)) {
-            setCriticasError("No se pudieron cargar las críticas.");
-            setCriticasLoaded(true);
+            setPostsError("No se pudieron cargar las reseñas.");
+            setPostsLoaded(true);
             return;
         }
 
         let cancelled = false;
-        setCriticasLoading(true);
-        setCriticasError(null);
+        setPostsLoading(true);
+        setPostsError(null);
 
         getPostsByBook({ bookId, viewerId: user?.id })
             .then((posts) => {
                 if (cancelled) return;
-                setCriticasPosts(posts);
+                setPosts(posts);
             })
             .catch((err) => {
                 console.error(err);
                 if (cancelled) return;
-                setCriticasError("No se pudieron cargar las críticas.");
+                setPostsError("No se pudieron cargar las reseñas.");
             })
             .finally(() => {
                 if (cancelled) return;
-                setCriticasLoading(false);
-                setCriticasLoaded(true);
+                setPostsLoading(false);
+                setPostsLoaded(true);
             });
 
         return () => {
             cancelled = true;
         };
-    }, [selectedSection, criticasLoaded, bookId, user?.id]);
+    }, [selectedSection, postsLoaded, bookId, user?.id]);
 
 
-    const handleCriticaDeleted = (deletedPostId: string) => {
-        setCriticasPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
+    const handlePostDeleted = (deletedPostId: string) => {
+        setPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
     };
 
-    const handleToggleLike = useToggleLike({ userId: user?.id, setPosts: setCriticasPosts });
+    const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
 
     const bookSnapshot = useMemo(() => {
         if (!bookData || !bookId) return null;
@@ -140,7 +140,7 @@ export const BookView = () => {
                 </div>
             </div>
 
-            {/* Selection bar for Descripcion / Author / Criticas */}
+            {/* Selection bar for Descripcion / Author / Reseñas */}
             <div className="mt-8 border-b border-neutral-200 pb-4">
                 <button
                     className={`px-4 py-1.5 text-sm font-medium rounded-full transition ${
@@ -164,13 +164,13 @@ export const BookView = () => {
                 </button>
                 <button
                     className={`ml-2 px-4 py-1.5 text-sm font-medium rounded-full transition ${
-                    selectedSection === "criticas"
+                    selectedSection === "posts"
                         ? "text-red-500"
                         : "text-neutral-700 hover:bg-neutral-100"
                     }`}
-                    onClick={() => setSelectedSection("criticas")}
+                    onClick={() => setSelectedSection("posts")}
                 >
-                    Criticas
+                    Reseñas
                 </button>
             </div>
             {/* Content depending on selected section */}
@@ -192,30 +192,30 @@ export const BookView = () => {
                 </section>
                 )}
 
-                {selectedSection === "criticas" && (
+                {selectedSection === "posts" && (
                 <section className="mt-6">
-                    <h2 className="text-2xl font-semibold mb-4">Críticas</h2>
-                    {criticasLoading && (
+                    <h2 className="text-2xl font-semibold mb-4">Reseñas</h2>
+                    {postsLoading && (
                         <>
                             <PostCardSkeleton />
                             <PostCardSkeleton />
                             <PostCardSkeleton />
                         </>
                     )}
-                    {criticasError && (
-                        <p className="text-center text-sm text-red-500">{criticasError}</p>
+                    {postsError && (
+                        <p className="text-center text-sm text-red-500">{postsError}</p>
                     )}
-                    {!criticasLoading && !criticasError && criticasPosts.length === 0 && (
+                    {!postsLoading && !postsError && posts.length === 0 && (
                         <p className="text-center text-sm text-gray-500">
-                            No hay críticas para este libro.
+                            No hay reseñas para este libro.
                         </p>
                     )}
                     <div className="space-y-4">
-                        {criticasPosts.map((post) => (
+                        {posts.map((post) => (
                             <PostCard
                                 key={post.id}
                                 post={post}
-                                onDelete={handleCriticaDeleted}
+                                onDelete={handlePostDeleted}
                                 onToggleLike={handleToggleLike}
                                 showBookInline={false}
                             />

@@ -7,17 +7,17 @@ export const BookStatusSelect = ({
   bookSnapshot,
   userId,
 }: BookStatusSelectProps) => {
-  const [userBookStatus, setUserBookStatus] = useState<UserBookStatus | "remove">("want_to_read");
+  const [userBookStatus, setUserBookStatus] = useState<UserBookStatus>("want_to_read");
   const [statusLoading, setStatusLoading] = useState<boolean>(false);
   const [statusError, setStatusError] = useState<string | null>(null);
-  const [hasUserBook, setHasUserBook] = useState<boolean>(false);
+  const [hasUserBookStatus, setHasUserBookStatus] = useState<boolean>(false);
 
   const canLoad = useMemo(() => !!bookId && !!userId, [bookId, userId]);
 
   useEffect(() => {
     if (!bookId || !userId) {
       setUserBookStatus("want_to_read");
-      setHasUserBook(false);
+      setHasUserBookStatus(false);
       return;
     }
 
@@ -28,8 +28,8 @@ export const BookStatusSelect = ({
     getUserBookByBookId({ bookId, userId })
       .then((row) => {
         if (cancelled) return;
-        setUserBookStatus(row ? row.status ?? "remove" : "want_to_read");
-        setHasUserBook(!!row);
+        setUserBookStatus(row?.status ?? "want_to_read");
+        setHasUserBookStatus(!!row?.status);
       })
       .catch((err) => {
         console.error(err);
@@ -49,17 +49,17 @@ export const BookStatusSelect = ({
   const handleStatusChange = async (nextStatus: UserBookStatus | "remove") => {
     if (!bookId || !userId || !bookSnapshot) return;
 
-    setUserBookStatus(nextStatus);
+    setUserBookStatus(nextStatus === "remove" ? "want_to_read" : nextStatus);
     setStatusLoading(true);
     setStatusError(null);
 
     try {
       if (nextStatus === "remove") {
         await upsertUserBook({ book: bookSnapshot, status: null }); // reset the reading status
-        setHasUserBook(true);
+        setHasUserBookStatus(false);
       } else {
         await upsertUserBook({ book: bookSnapshot, status: nextStatus });
-        setHasUserBook(true);
+        setHasUserBookStatus(true);
       }
     } catch (err) {
       console.error(err);
@@ -78,13 +78,13 @@ export const BookStatusSelect = ({
           onChange={(e) => handleStatusChange(e.target.value as UserBookStatus | "remove")}
           disabled={statusLoading || !canLoad}
           className={`mt-1 w-48 border rounded px-2 py-1.5 text-sm ${
-            hasUserBook ? "border-red-500 text-red-600" : "border-neutral-300 text-neutral-800"
+            hasUserBookStatus ? "border-red-500 text-red-600" : "border-neutral-300 text-neutral-800"
           }`}
         >
           <option value="want_to_read">Quiero leer</option>
           <option value="reading">Leyendo</option>
           <option value="finished">Terminado</option>
-          {hasUserBook && <option value="remove">Quitar</option>}
+          {hasUserBookStatus && <option value="remove">Quitar</option>}
         </select>
       ) : (
         <p className="mt-1 text-sm text-gray-500">Inicia sesión para guardar tu estado.</p>
