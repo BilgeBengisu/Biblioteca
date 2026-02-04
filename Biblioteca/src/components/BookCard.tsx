@@ -30,7 +30,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
       {/* Loading = lazy parameter here is really useful because it only loads the image when it is about to enter the viewport, therefore reduces initial page load time and saves bandwidth */}
       <div className="aspect-[2/3] mb-2 rounded-lg overflow-hidden bg-neutral-200 dark:bg-neutral-800 shadow-md group-hover:shadow-xl transition-shadow">
         <img
-          src={book.image?.url || "../public/default-book-cover.png"}
+          src={book.image?.url || "/default-book-cover.png"}
           alt={book.title}
           className="w-full h-full object-cover"
           loading="lazy"
