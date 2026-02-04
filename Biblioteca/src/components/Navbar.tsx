@@ -25,6 +25,11 @@ export const Navbar = () => {
                             <Link to="/books">Libros</Link>
                         </li>
                         <li>
+                            <Link to="/search" className="navbar-search-btn">
+                                Buscar
+                            </Link>
+                        </li>
+                        <li>
                             <Link to="/profile" className="profile-link">
                                 <img
                                     src={
@@ -44,10 +49,10 @@ export const Navbar = () => {
                 ) : (
                     <>
                         <li>
-                            <Link to="/login">Entregar</Link>
+                            <Link to="/login">Entrar</Link>
                         </li>
                         <li>
-                            <Link to="/register">Registarse</Link>
+                            <Link to="/register">Registrarse</Link>
                         </li>
                     </>
                 )}

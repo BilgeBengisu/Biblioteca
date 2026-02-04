@@ -72,6 +72,8 @@ export const Posts = () => {
         };
     }, [filter, user?.id]);
 
+    const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
+
     if (loading) {
         return <p className="text-center text-sm text-gray-500">Cargando publicaciones</p>;
     }
@@ -79,8 +81,6 @@ export const Posts = () => {
     if (error) {
         return <p className="text-center text-sm text-red-500">{error}</p>;
     }
-
-    const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
 
     return (
         <div className="max-w-3xl mx-auto p-4 space-y-4">

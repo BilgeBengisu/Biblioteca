@@ -16,10 +16,10 @@ import { useToggleLike } from "../hooks/useToggleLike";
 export const Profile = () => {
     const { user, refreshProfile } = useAuth();
     const { username } = useParams<{ username?: string }>();
-    // checking if the user is viewing their own profile
-    const isOwnProfile = !username || !!user; // If /profile (no username), the user is logged in and viewing their own profile
 
     const [profile, setProfile] = useState<ProfileRow | null>(null);
+    // checking if the user is viewing their own profile
+    const isOwnProfile = !username ? !!user : profile?.id === user?.id;
     const [isLoading, setIsLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -183,7 +183,7 @@ export const Profile = () => {
     // setting display name
     const displayName =
         profile?.username ||
-        user.email ||
+        profile?.email ||
         "usuario";
 
     return (
