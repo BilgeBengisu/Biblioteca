@@ -42,7 +42,7 @@ export async function getPosts(
         username,
         avatar_url
       ),
-      user_books (
+      user_books(
         id,
         book_id,
         book_data
@@ -128,6 +128,81 @@ export async function getPosts(
     ...post,
     like_count: likeCounts.get(post.id) ?? 0,
     liked_by_me: user?.id ? likedByMe.has(post.id) : false,
+  }));
+}
+
+export async function getPostsByBook(options: {
+  bookId: number;
+  viewerId?: string;
+}): Promise<Post[]> {
+  const { bookId, viewerId } = options;
+
+  let query = supabase
+    .from("posts")
+    .select(`
+      *,
+      profiles (
+        id,
+        username,
+        avatar_url
+      ),
+      user_books!inner (
+        id,
+        book_id,
+        book_data
+      )
+    `)
+    .order("created_at", { ascending: false })
+    .eq("user_books.book_id", bookId);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  const posts = data.map(mapPost);
+  if (posts.length === 0) return posts;
+
+  let userId = viewerId;
+  if (!userId) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) {
+      console.error(userError);
+    }
+
+    userId = user?.id;
+  }
+
+  const postIds = posts.map((post) => post.id);
+
+  const { data: likesData, error: likesError } = await supabase
+    .from("post_likes")
+    .select("post_id, user_id")
+    .in("post_id", postIds);
+
+  if (likesError) {
+    console.error(likesError);
+    return posts;
+  }
+
+  const likeCounts = new Map<string, number>();
+  const likedByMe = new Set<string>();
+
+  for (const like of likesData) {
+    likeCounts.set(like.post_id, (likeCounts.get(like.post_id) ?? 0) + 1);
+    if (userId && like.user_id === userId) likedByMe.add(like.post_id);
+  }
+
+  return posts.map((post) => ({
+    ...post,
+    like_count: likeCounts.get(post.id) ?? 0,
+    liked_by_me: userId ? likedByMe.has(post.id) : false,
   }));
 }
 

@@ -2,11 +2,18 @@ import { useParams } from "react-router-dom";
 import type { BooksData } from "../types/Book";
 import { useQuery } from "@apollo/client/react";
 import { GET_BOOK_BY_SLUG } from "../queries/queries";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StarRating } from "../components/StarRating";
+import { PostCard } from "../components/Postcard";
+import { PostCardSkeleton } from "../components/PostCardSkeleton";
+import type { Post } from "../types/Post";
+import { getPostsByBook } from "../services/posts";
+import { useAuth } from "../contexts/AuthContext";
+import { useToggleLike } from "../hooks/useToggleLike";
 
 export const BookView = () => {
     const { id } = useParams<{ id: string }>();
+    const { user } = useAuth();
     // for returning to previous page
     //const navigate = useNavigate();
 
@@ -21,12 +28,11 @@ export const BookView = () => {
         "descripcion" | "author" | "criticas"
     >("descripcion");
 
-    // handle loading and error states
-    if (loading) return <div>Cargando...</div>;
-    if (error) return <div>Error al cargar el libro</div>;
-    if (!data || !data.books?.length) {
-        return <div>Libro no ha sido encontrado</div>;
-    }
+    const [criticasPosts, setCriticasPosts] = useState<Post[]>([]);
+    const [criticasLoading, setCriticasLoading] = useState<boolean>(false);
+    const [criticasError, setCriticasError] = useState<string | null>(null);
+    const [criticasLoaded, setCriticasLoaded] = useState<boolean>(false);
+
     const bookData = data?.books?.[0];
 
     // Transform API book data to match component expectations
@@ -41,10 +47,61 @@ export const BookView = () => {
         authorBio: bookData.contributions?.[0]?.author?.bio,
     } : null;
     
-    if (!data) {
+    useEffect(() => {
+        setCriticasPosts([]);
+        setCriticasError(null);
+        setCriticasLoaded(false);
+    }, [bookData?.id]);
+
+    useEffect(() => {
+        if (selectedSection !== "criticas" || criticasLoaded) return;
+        if (!bookData?.id) return;
+
+        const rawBookId = bookData?.id;
+        const bookId = rawBookId ? Number(rawBookId) : NaN;
+        if (!Number.isFinite(bookId)) {
+            setCriticasError("No se pudieron cargar las críticas.");
+            setCriticasLoaded(true);
+            return;
+        }
+
+        let cancelled = false;
+        setCriticasLoading(true);
+        setCriticasError(null);
+
+        getPostsByBook({ bookId, viewerId: user?.id })
+            .then((posts) => {
+                if (cancelled) return;
+                setCriticasPosts(posts);
+            })
+            .catch((err) => {
+                console.error(err);
+                if (cancelled) return;
+                setCriticasError("No se pudieron cargar las críticas.");
+            })
+            .finally(() => {
+                if (cancelled) return;
+                setCriticasLoading(false);
+                setCriticasLoaded(true);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedSection, criticasLoaded, bookData?.id, user?.id]);
+
+    const handleCriticaDeleted = (deletedPostId: string) => {
+        setCriticasPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
+    };
+
+    const handleToggleLike = useToggleLike({ userId: user?.id, setPosts: setCriticasPosts });
+
+    // handle loading and error states
+    if (loading) return <div>Cargando...</div>;
+    if (error) return <div>Error al cargar el libro</div>;
+    if (!data || !data.books?.length) {
         return <div>Libro no ha sido encontrado</div>;
     }
-
 
     return (
         <div>
@@ -56,7 +113,6 @@ export const BookView = () => {
                         <p className="text-lg text-gray-700 mt-2">por {book?.author}</p>
                     </div>
                 </div>
-                {/* TO BE COMPLETED */}
                 <div className="p-4 absolute right-0 top-1/2 -translate-y-1/2">
                     <StarRating rating={book?.rating ?? 0} />
                 </div>
@@ -111,6 +167,38 @@ export const BookView = () => {
                     {(book as any).authorBio ||
                         `Información del autor ${book?.author} próximamente.`}
                     </p>
+                </section>
+                )}
+
+                {selectedSection === "criticas" && (
+                <section className="mt-6">
+                    <h2 className="text-2xl font-semibold mb-4">Críticas</h2>
+                    {criticasLoading && (
+                        <>
+                            <PostCardSkeleton />
+                            <PostCardSkeleton />
+                            <PostCardSkeleton />
+                        </>
+                    )}
+                    {criticasError && (
+                        <p className="text-center text-sm text-red-500">{criticasError}</p>
+                    )}
+                    {!criticasLoading && !criticasError && criticasPosts.length === 0 && (
+                        <p className="text-center text-sm text-gray-500">
+                            No hay críticas para este libro.
+                        </p>
+                    )}
+                    <div className="space-y-4">
+                        {criticasPosts.map((post) => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                onDelete={handleCriticaDeleted}
+                                onToggleLike={handleToggleLike}
+                                showBookInline={false}
+                            />
+                        ))}
+                    </div>
                 </section>
                 )}
             </div>

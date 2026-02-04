@@ -11,9 +11,15 @@ type PostCardProps = {
   post: Post;
   onDelete: (deletedPostId: string) => void;// this is to notify parent on deletion so the ui can be updated
   onToggleLike: (postId: string, currentlyLiked: boolean) => void;
+  showBookInline?: boolean;
 };
 
-export const PostCard = ({ post, onDelete, onToggleLike }: PostCardProps) => {
+export const PostCard = ({
+  post,
+  onDelete,
+  onToggleLike,
+  showBookInline = true,
+}: PostCardProps) => {
   // getting the currently logged user
   const { user } = useAuth();
   // getting the mapping of the post that was fetched from supabase
@@ -118,7 +124,7 @@ export const PostCard = ({ post, onDelete, onToggleLike }: PostCardProps) => {
             )}
 
             {/* Book display */}
-            {book && (
+            {showBookInline && book && (
               <BookInlineCard
                 book={book}
                 rightSlot={
