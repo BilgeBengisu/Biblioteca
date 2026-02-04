@@ -10,6 +10,7 @@ import { ProfileTabView } from "../components/ProfileTabView";
 import { useParams } from "react-router-dom";
 import { FollowButton } from "../components/FollowButton";
 import { FollowCounts } from "../components/FollowCounts";
+import { useToggleLike } from "../hooks/useToggleLike";
 
 
 export const Profile = () => {
@@ -39,6 +40,7 @@ export const Profile = () => {
     const [postsLoading, setPostsLoading] = useState(false);
     const [postsError, setPostsError] = useState<string | null>(null);
     const [postsLoadedFor, setPostsLoadedFor] = useState<string | null>(null);
+    const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
 
     // don't carry the refresh key for follower count to other profiles
     useEffect(() => {
@@ -273,6 +275,7 @@ export const Profile = () => {
                     onPostDeleted={(deletedPostId) => {
                         setPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
                     }}
+                    onPostToggleLike={handleToggleLike}
                 />
             </div>
         </div>

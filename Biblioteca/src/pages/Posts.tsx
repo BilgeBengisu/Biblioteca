@@ -1,10 +1,11 @@
-import { getPosts, likePost, unlikePost } from "../services/posts";
+import { getPosts } from "../services/posts";
 import type { Post } from "../types/Post";
 import { useEffect, useState } from "react";
 import { NewPostForm } from "../components/NewPostForm";
-import { PostCard } from "../components/PostCard";
+import { PostCard } from "../components/Postcard";
 import { useAuth } from "../contexts/AuthContext";
 import { PostCardSkeleton } from "../components/PostCardSkeleton";
+import { useToggleLike } from "../hooks/useToggleLike";
 
 export const Posts = () => {
     const { user } = useAuth();
@@ -79,40 +80,7 @@ export const Posts = () => {
         return <p className="text-center text-sm text-red-500">{error}</p>;
     }
 
-    // handling the like on Postcard
-    const handleToggleLike = async (postId: string, currentlyLiked: boolean) => {
-        if (!user) return;
-
-        // optimistic update, meaning we update the ui before knowing if the database request succeded or not and revert later if it didn't
-        setPosts((prev) =>
-            prev.map((p) => {
-            if (p.id !== postId) return p;
-            const nextLiked = !currentlyLiked;
-            const currentCount = p.like_count ?? 0;
-            const nextCount = nextLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
-            return { ...p, liked_by_me: nextLiked, like_count: nextCount };
-            })
-        );
-
-        try {
-            if (currentlyLiked) await unlikePost(postId, user.id);
-            else await likePost(postId, user.id);
-        } catch (err) {
-            console.error(err);
-
-            // revert if likePost database insert was not successful
-            setPosts((prev) =>
-            prev.map((p) => {
-                if (p.id !== postId) return p;
-                const currentCount = p.like_count ?? 0;
-                const revertedCount = currentlyLiked
-                ? currentCount + 1
-                : Math.max(0, currentCount - 1);
-                return { ...p, liked_by_me: currentlyLiked, like_count: revertedCount };
-            })
-            );
-        }
-    };
+    const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
 
     return (
         <div className="max-w-3xl mx-auto p-4 space-y-4">

@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // and stays stable across renders 
   const profileRequestId = useRef(0); 
 
+  // loading profile in authContext makes its reusage in navbar and profile page better
   const loadProfileForUser = async (currentUser: User | null) => {
     // this line marks the async call (no two calls share the same id and the latest one is prefered)
     // the conditional check profileRequestId.current === requestId makes the older requestId outdated

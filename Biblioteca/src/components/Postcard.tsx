@@ -19,7 +19,15 @@ export const PostCard = ({ post, onDelete, onToggleLike }: PostCardProps) => {
   // getting the mapping of the post that was fetched from supabase
   const { author, type, content, status, userBook, created_at } = post;
 
-  const book = userBook?.bookData; // shorthand for easier access
+  const book = userBook?.bookData // matching the PostBook type
+  ? {
+      id: userBook.bookId,
+      title: userBook.bookData.title,
+      author: userBook.bookData.author ?? "Desconocido",
+      coverUrl: userBook.bookData.coverUrl,
+      slug: userBook.bookData.slug ?? null,
+    }
+  : undefined;
 
   const [isDeleting, setIsDeleting] = useState(false);
 

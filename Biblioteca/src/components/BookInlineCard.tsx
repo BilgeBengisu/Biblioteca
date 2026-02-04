@@ -6,19 +6,19 @@ export const BookInlineCard = ({
   rightSlot,
   className = "", // to allow custom styling for different use cases
 }: {
-  book: PostBook;
+  book?: PostBook;
   rightSlot?: React.ReactNode; // TODO: rating, status badge, etc.
   className?: string;
 }) => {
   return (
     <Link
-      to={book.slug ? `/books/${book.slug}` : "#"}
+      to={book?.slug ? `/books/${book.slug}` : "#"}
       className={`flex items-center gap-3 hover:opacity-80 ${className}`}
       onClick={(e) => {
-        if (!book.slug) e.preventDefault();
+        if (!book?.slug) e.preventDefault();
       }}
     >
-      {book.coverUrl ? (
+      {book?.coverUrl ? (
         <img
           src={book.coverUrl}
           alt={book.title}
@@ -30,10 +30,10 @@ export const BookInlineCard = ({
       )}
 
       <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-lg truncate">{book.title}</h3>
+        <h3 className="font-semibold text-lg truncate">{book?.title}</h3>
 
-        {book.author ? (
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">por {book.author}</p>
+        {book?.author ? (
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">por {book?.author}</p>
         ) : null}
 
         {rightSlot ? <div className="mt-2">{rightSlot}</div> : null}

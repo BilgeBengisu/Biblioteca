@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import type { UserBookRow } from "../types/Profile";
 import type { Post, PostBook } from "../types/Post";
 import { BookInlineCard } from "./BookInlineCard";
-import { PostCard } from "./PostCard";
+import { PostCard } from "./Postcard";
+import { StarRating } from "./StarRating";
 
 export type ProfileTab = "library" | "posts";
 type LibraryView = "want_to_read" | "reading" | "finished";
@@ -18,6 +19,7 @@ export const ProfileTabView = ({
   postsLoading,
   postsError,
   onPostDeleted,
+  onPostToggleLike,
 }: {
   activeTab: ProfileTab;
   onChange: (tab: ProfileTab) => void;
@@ -32,6 +34,7 @@ export const ProfileTabView = ({
   postsLoading: boolean;
   postsError: string | null;
   onPostDeleted: (deletedPostId: string) => void;
+  onPostToggleLike: (postId: string, currentlyLiked: boolean) => void;
 }) => {
   const [libraryView, setLibraryView] = useState<LibraryView>("reading");
 
@@ -117,9 +120,9 @@ export const ProfileTabView = ({
                             book={book}
                             rightSlot={
                             ub.status === "finished" && ub.rating != null ? (
-                                <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                                Tu calificación: {ub.rating}/5
-                                </span>
+                                <div className="mt-1">
+                                    <StarRating rating={ub.rating} />
+                                </div>
                             ) : null
                             }
                         />
@@ -141,7 +144,12 @@ export const ProfileTabView = ({
                 <p className="text-sm text-neutral-600">No hay publicaciones todavía.</p>
               ) : (
                 posts.map((post) => (
-                  <PostCard key={post.id} post={post} onDelete={onPostDeleted} />
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    onDelete={onPostDeleted}
+                    onToggleLike={onPostToggleLike}
+                  />
                 ))
               )}
             </div>
