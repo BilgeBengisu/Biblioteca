@@ -34,6 +34,7 @@ export const EditProfileForm = ({
   const [readingGoal, setReadingGoal] = useState<string>("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -70,7 +71,31 @@ export const EditProfileForm = ({
     } finally {
         setIsUploadingAvatar(false);
     }
-    };
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!currentAvatarUrl) return;
+
+    setIsRemovingAvatar(true);
+    setErrorMsg(null);
+
+    try {
+      const updated = await updateProfile(userId, {
+        username: username.trim().length ? username.trim() : null,
+        bio: bio.trim().length ? bio.trim() : null,
+        reading_goal: readingGoal.trim().length ? Number(readingGoal) : null,
+        avatar_url: null,
+      });
+
+      setAvatarFile(null);
+      onSaved(updated);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al eliminar la foto de perfil.";
+      setErrorMsg(msg);
+    } finally {
+      setIsRemovingAvatar(false);
+    }
+  };
 
   // error messages for invalid inputs
   const validate = () => {
@@ -135,14 +160,26 @@ export const EditProfileForm = ({
                     className="block w-full text-sm"
                 />
 
-                <button
+                <div className="flex items-center gap-2">
+                  <button
                     type="button"
                     onClick={handleAvatarUpload}
-                    disabled={!avatarFile || isUploadingAvatar || isSaving}
+                    disabled={!avatarFile || isUploadingAvatar || isSaving || isRemovingAvatar}
                     className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50"
-                >
+                  >
                     {isUploadingAvatar ? "Subiendo…" : "Subir avatar"}
-                </button>
+                  </button>
+                  {currentAvatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      disabled={isUploadingAvatar || isSaving || isRemovingAvatar}
+                      className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 text-red-600 hover:bg-red-50 dark:hover:bg-neutral-800 disabled:opacity-50"
+                    >
+                      {isRemovingAvatar ? "Eliminando…" : "Eliminar foto"}
+                    </button>
+                  )}
+                </div>
             </div>
         </div>
       </div>

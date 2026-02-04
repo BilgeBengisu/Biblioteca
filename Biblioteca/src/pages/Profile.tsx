@@ -49,6 +49,9 @@ export const Profile = () => {
 
     // setting profile
     useEffect(() => {
+        // nothing to fetch
+        if (!user && !username) return;
+        
         setIsLoading(true);
         setErrorMsg(null);
 

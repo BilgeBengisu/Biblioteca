@@ -9,7 +9,7 @@ export function SearchResults({ state }: { state: SearchState }) {
 
   // no need to search, no input yet
   if (state.status === "idle") {
-    return ;
+    return null;
   }
 
   if (state.status === "loading") {

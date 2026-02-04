@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Post } from "../types/Post";
-import { useNavigate } from "react-router-dom";
 import { createPost } from "../services/posts";
-import { SEARCH_BOOKS } from "../queries/queries";
-import type { BookData } from "../types/Book";
-import { apolloClient } from "../contexts/ApolloClient.tsx";
 import { BookSearchInput, type SearchBook } from "./BookSearchInput";
 import { upsertUserBook } from "../services/userBooks";
 

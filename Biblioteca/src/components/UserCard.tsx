@@ -21,7 +21,7 @@ export const UserCard = ({ user, className = "" }: UserCardProps) => {
     >
       <img
         src={user.avatarUrl ?? defaultAvatar}
-        alt=""
+        alt="avatar"
         className="h-12 w-12 rounded-full object-cover bg-neutral-100"
         loading="lazy"
       />
