@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Post } from "../types/Post";
 import { createPost } from "../services/posts";
 import { BookSearchInput, type SearchBook } from "./BookSearchInput";

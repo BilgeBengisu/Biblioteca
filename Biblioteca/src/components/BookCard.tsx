@@ -12,7 +12,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
   const authorName =
     book.contributions?.[0]?.author?.name ?? "Autor desconocido";
 
-  const rating = book.rating ? Math.round(book.rating) : null;
+  //const rating = book.rating ? Math.round(book.rating) : null;
 
   return (
     <div

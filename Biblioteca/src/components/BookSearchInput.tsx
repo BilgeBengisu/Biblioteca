@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { SEARCH_BOOKS } from "../queries/queries";
 import { apolloClient } from "../contexts/ApolloClient.tsx";
+import type { SearchBooksVariables, SearchResponse } from "../types/Search";
 
 export type SearchBook = {
   id: string;
@@ -34,7 +35,7 @@ export const BookSearchInput = ({ value, onChange }: BookSearchInputProps) => {
 
     setIsSearching(true);
     try {
-      const response = await apolloClient.query({
+      const response = await apolloClient.query<SearchResponse, SearchBooksVariables>({
         query: SEARCH_BOOKS,
         variables: { query: query, perPage: 5, page: 1 },
         fetchPolicy: "no-cache",

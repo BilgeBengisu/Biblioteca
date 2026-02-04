@@ -2,13 +2,13 @@
 import { supabase } from "../supabase-client";
 import { apolloClient } from "../contexts/ApolloClient";
 import { SEARCH_BOOKS } from "../queries/queries";
-import type { BookResult, UserResult } from "../types/Search";
+import type { BookResult, SearchBooksVariables, SearchResponse, UserResult } from "../types/Search";
 
 export async function searchBooks(query: string, signal?: AbortSignal): Promise<BookResult[]> {
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   if (!query.trim()) return [];
 
-  const response = await apolloClient.query({
+  const response = await apolloClient.query<SearchResponse, SearchBooksVariables>({
     query: SEARCH_BOOKS,
     variables: { query: query.trim(), perPage: 20, page: 1 },
     fetchPolicy: "no-cache",

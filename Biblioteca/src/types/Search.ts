@@ -1,5 +1,19 @@
 export type SearchType= "books" | "users";
 
+export type SearchBooksVariables = {
+  query: string;
+  perPage?: number;
+  page?: number;
+};
+
+export type SearchResponse<TDocument = unknown> = {
+  search?: {
+    results?: {
+      hits?: Array<{ document?: TDocument | null } | null> | null;
+    } | null;
+  } | null;
+};
+
 export type BookResult = {
   id: number;
   title: string;
