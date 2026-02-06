@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Login.css';
 
 export const Login = () => {
@@ -23,7 +23,6 @@ export const Login = () => {
             <h1>Inicia Sesión</h1>
             <br></br>
             {message && <span>{message}</span>}
-            <p>Inicia sesión en tu cuenta.</p>
             <form 
                 className="login-form"
                 onSubmit={async (e) => {
@@ -82,6 +81,12 @@ export const Login = () => {
             >
                 Continuar con Google
             </button>
+
+            <div>
+                <Link to="/register">
+                No tenes cuenta? Registrate aquí.
+                </Link>
+            </div>
         </div>
     )
 

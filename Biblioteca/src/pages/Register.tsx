@@ -1,15 +1,18 @@
 import { useAuth } from "../contexts/AuthContext";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { isUsernameAvailable } from "../services/profiles";
 import "./Register.css";
 
 export const Register = () => {
   const { signUpWithPassword, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const usernameInputRef = useRef<HTMLInputElement | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,14 +21,11 @@ export const Register = () => {
     <div className="register-container">
       <h1>Registrarse</h1>
       <br />
-      {message && <span>{message}</span>}
-
       <form
         className="register-form"
         onSubmit={async (e) => {
           e.preventDefault();
           setError(null);
-          setMessage("");
 
           if (password !== confirmPassword) {
             setError("Las contraseñas no coinciden");
@@ -34,8 +34,34 @@ export const Register = () => {
 
           setLoading(true);
 
+          const trimmedUsername = username.trim();
+          if (!trimmedUsername) {
+            setError("El nombre de usuario es obligatorio.");
+            setLoading(false);
+            usernameInputRef.current?.focus();
+            return;
+          }
+
+          // check if username is taken
+          try {
+            const available = await isUsernameAvailable(trimmedUsername);
+            if (!available) {
+              setError("El nombre de usuario ya está en uso. Intenta otro.");
+              setLoading(false);
+              setUsername("");
+              usernameInputRef.current?.focus();
+              return;
+            }
+          } catch (e) {
+            const msg =
+              e instanceof Error ? e.message : "No se pudo verificar el nombre de usuario.";
+            setError(msg);
+            setLoading(false);
+            return;
+          }
+
           const { error } = await signUpWithPassword(email, password, {
-            username,
+            username: trimmedUsername,
           });
 
           if (error) {
@@ -44,10 +70,8 @@ export const Register = () => {
             return;
           }
 
-          // TODO: implement email confirmation
-          // Show message to check email for confirmation
-          setMessage("Por favor revisa tu correo para confirmar tu cuenta.");
           setLoading(false);
+          navigate("/confirm-email", { state: { email } });
         }}
       >
         <label>
@@ -59,6 +83,7 @@ export const Register = () => {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Nombre de usuario"
             required
+            ref={usernameInputRef}
           />
         </label>
 
@@ -113,7 +138,6 @@ export const Register = () => {
         disabled={loading}
         onClick={async () => {
           setError(null);
-          setMessage("");
           setLoading(true);
           const { error } = await signInWithGoogle();
           if (error) setError(error.message);
@@ -122,6 +146,12 @@ export const Register = () => {
       >
         Continuar con Google
       </button>
+
+      <div>
+        <Link to="/login">
+          Ya tenes cuenta? Inicia sesión aquí.
+        </Link>
+      </div>
     </div>
   );
 };

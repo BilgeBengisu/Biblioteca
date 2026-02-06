@@ -10,6 +10,7 @@ import { Books } from "./pages/Books";
 import { BookView} from "./pages/BookView";
 import { AuthCallback } from "./pages/AuthCallBack";
 import { Search } from "./pages/Search";
+import { ConfirmEmail } from "./pages/ConfirmEmail";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/books" element={<Books/>} />
           <Route path="/books/:id" element={<BookView />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/confirm-email" element={<ConfirmEmail />} />
           <Route path="/profile/:username" element={<Profile />} /> 
           <Route path="/search" element={<Search />} />
           <Route path="*" element={<h1>404 Not Found</h1>} />

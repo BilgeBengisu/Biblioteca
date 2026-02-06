@@ -30,6 +30,17 @@ export async function getProfileByUsername(username: string): Promise<ProfileRow
   return data as ProfileRow;
 }
 
+export async function isUsernameAvailable(username: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (error) throw error;
+  return !data;
+}
+
 export async function updateProfileById(
   userId: string,
   updates: Pick<ProfileRow, "username" | "bio" | "reading_goal"> & {
