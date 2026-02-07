@@ -12,7 +12,7 @@ type EditProfileFormProps = {
   updateProfile: (
     userId: string,
     updates: {
-      username: string | null;
+      username?: string | null;
       bio: string | null;
       reading_goal: number | null;
       avatar_url?: string | null;
@@ -40,6 +40,18 @@ export const EditProfileForm = ({
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ username?: string }>({});
+
+  const normalizedUsername = username.trim();
+  const normalizedBio = bio.trim();
+  const normalizedReadingGoal = readingGoal.trim();
+  const profileUsername = (profile.username ?? "").trim();
+  const profileBio = (profile.bio ?? "").trim();
+  const profileReadingGoal = profile.reading_goal != null ? String(profile.reading_goal) : "";
+
+  const hasChanges =
+    normalizedUsername !== profileUsername ||
+    normalizedBio !== profileBio ||
+    normalizedReadingGoal !== profileReadingGoal;
 
   // Prefill when component mounts / profile changes
   useEffect(() => {
@@ -75,10 +87,12 @@ export const EditProfileForm = ({
     setFieldErrors({});
 
     try {
+        const trimmedUsername = username.trim();
+        const usernameUpdate = trimmedUsername.length ? trimmedUsername : undefined;
         const { publicUrl } = await uploadAvatar(avatarBucket, userId, avatarFile);
 
         const updated = await updateProfile(userId, {
-            username: username.trim() || null,
+            username: usernameUpdate,
             bio: bio.trim() || null,
             reading_goal: readingGoal.trim() ? Number(readingGoal) : null,
             avatar_url: publicUrl,
@@ -106,8 +120,10 @@ export const EditProfileForm = ({
     setFieldErrors({});
 
     try {
+      const trimmedUsername = username.trim();
+      const usernameUpdate = trimmedUsername.length ? trimmedUsername : undefined;
       const updated = await updateProfile(userId, {
-        username: username.trim().length ? username.trim() : null,
+        username: usernameUpdate,
         bio: bio.trim().length ? bio.trim() : null,
         reading_goal: readingGoal.trim().length ? Number(readingGoal) : null,
         avatar_url: null,
@@ -130,6 +146,7 @@ export const EditProfileForm = ({
 
   // error messages for invalid inputs
   const validate = () => {
+    if (username.trim().length === 0) return "El nombre de usuario es obligatorio.";
     if (username.trim().length > 0) {
       const u = username.trim();
       if (u.length < 3 || u.length > 30) return "El nombre de usuario debe tener entre 3 y 30 caracteres.";
@@ -157,8 +174,10 @@ export const EditProfileForm = ({
     setFieldErrors({});
 
     try {
+      const trimmedUsername = username.trim();
+      const usernameUpdate = trimmedUsername.length ? trimmedUsername : undefined;
       const updated = await updateProfile(userId, {
-        username: username.trim().length ? username.trim() : null,
+        username: usernameUpdate,
         bio: bio.trim().length ? bio.trim() : null,
         reading_goal: readingGoal.trim().length ? Number(readingGoal) : null,
       });
@@ -300,7 +319,7 @@ export const EditProfileForm = ({
         </button>
         <button
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || !hasChanges}
           className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50"
         >
           {isSaving ? "Guardando…" : "Guardar"}

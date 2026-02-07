@@ -1,11 +1,12 @@
 import { useAuth } from "../contexts/AuthContext";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { isUsernameAvailable } from "../services/profiles";
 import "./Register.css";
+import { isUsernameMissing } from "../utils/profile";
 
 export const Register = () => {
-  const { signUpWithPassword, signInWithGoogle } = useAuth();
+  const { user, profile, signUpWithPassword, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -16,6 +17,17 @@ export const Register = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    // If email isn't confirmed yet, stay on the register/confirm flow.
+    if (!user.email_confirmed_at) return;
+    if (isUsernameMissing(profile?.username)) {
+      navigate("/complete-profile", { replace: true });
+      return;
+    }
+    navigate("/profile", { replace: true });
+  }, [user, profile?.username, navigate]);
 
   return (
     <div className="register-container">

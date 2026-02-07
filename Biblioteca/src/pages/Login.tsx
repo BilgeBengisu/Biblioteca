@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import './Login.css';
+import { isUsernameMissing } from '../utils/profile';
 
 export const Login = () => {
-    const { user, signInWithPassword, signInWithGoogle } = useAuth();
+    const { user, profile, signInWithPassword, signInWithGoogle } = useAuth();
     const [message, setMessage] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -15,8 +16,13 @@ export const Login = () => {
 
     // using use effect to check for user in session from AuthContext to redirect to profile
     useEffect(() => {
-        if (user) navigate("/profile", { replace: true }); // avoiding redirect loops back and forth between login and profile
-    }, [user, navigate]);
+        if (!user) return;
+        if (isUsernameMissing(profile?.username)) {
+            navigate("/complete-profile", { replace: true });
+            return;
+        }
+        navigate("/profile", { replace: true }); // avoiding redirect loops back and forth between login and profile
+    }, [user, profile?.username, navigate]);
 
     return (
         <div className="login-container">
