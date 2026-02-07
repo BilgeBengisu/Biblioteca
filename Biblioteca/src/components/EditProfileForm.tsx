@@ -38,6 +38,7 @@ export const EditProfileForm = ({
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ username?: string }>({});
 
   // Prefill when component mounts / profile changes
   useEffect(() => {
@@ -45,7 +46,19 @@ export const EditProfileForm = ({
     setBio(profile.bio ?? "");
     setReadingGoal(profile.reading_goal != null ? String(profile.reading_goal) : "");
     setErrorMsg(null);
+    setFieldErrors({});
   }, [profile]);
+
+  const mapProfileError = (message: string) => {
+    const lower = message.toLowerCase();
+    if (
+      lower.includes("profiles_username_lower_idx") ||
+      (lower.includes("duplicate key value") && lower.includes("username"))
+    ) {
+      return { fieldErrors: { username: "Ese nombre de usuario ya está en uso." } };
+    }
+    return { general: message };
+  };
 
   // Handle avatar upload
   const handleAvatarUpload = async () => {
@@ -53,6 +66,7 @@ export const EditProfileForm = ({
 
     setIsUploadingAvatar(true);
     setErrorMsg(null);
+    setFieldErrors({});
 
     try {
         const { publicUrl } = await uploadAvatar(avatarBucket, userId, avatarFile);
@@ -67,7 +81,12 @@ export const EditProfileForm = ({
         onSaved(updated);
     } catch (e) {
         const msg = e instanceof Error ? e.message : "Error al subir el avatar.";
-        setErrorMsg(msg);
+        const mapped = mapProfileError(msg);
+        if (mapped.fieldErrors) {
+          setFieldErrors(mapped.fieldErrors);
+        } else {
+          setErrorMsg(mapped.general ?? msg);
+        }
     } finally {
         setIsUploadingAvatar(false);
     }
@@ -78,6 +97,7 @@ export const EditProfileForm = ({
 
     setIsRemovingAvatar(true);
     setErrorMsg(null);
+    setFieldErrors({});
 
     try {
       const updated = await updateProfile(userId, {
@@ -91,7 +111,12 @@ export const EditProfileForm = ({
       onSaved(updated);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al eliminar la foto de perfil.";
-      setErrorMsg(msg);
+      const mapped = mapProfileError(msg);
+      if (mapped.fieldErrors) {
+        setFieldErrors(mapped.fieldErrors);
+      } else {
+        setErrorMsg(mapped.general ?? msg);
+      }
     } finally {
       setIsRemovingAvatar(false);
     }
@@ -123,6 +148,7 @@ export const EditProfileForm = ({
 
     setIsSaving(true);
     setErrorMsg(null);
+    setFieldErrors({});
 
     try {
       const updated = await updateProfile(userId, {
@@ -134,7 +160,12 @@ export const EditProfileForm = ({
       onSaved(updated);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar el perfil.";
-      setErrorMsg(msg);
+      const mapped = mapProfileError(msg);
+      if (mapped.fieldErrors) {
+        setFieldErrors(mapped.fieldErrors);
+      } else {
+        setErrorMsg(mapped.general ?? msg);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -187,11 +218,23 @@ export const EditProfileForm = ({
         <label className="text-sm text-neutral-700 dark:text-neutral-200">Nombre de Usuario</label>
         <input
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="your_username"
-          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-800 bg-transparent px-3 py-2 text-sm"
+          onChange={(e) => setUsername(e.target.value.toLowerCase())}
+          placeholder="nombre_de_usuario"
+          aria-invalid={Boolean(fieldErrors.username)}
+          aria-describedby={fieldErrors.username ? "username-error" : undefined}
+          className={`w-full rounded-lg border bg-transparent px-3 py-2 text-sm ${
+            fieldErrors.username
+              ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              : "border-neutral-200 dark:border-neutral-800"
+          }`}
         />
-        <p className="text-xs text-neutral-500">3–30 caracteres. Solo letras, números y guiones bajos.</p>
+        {fieldErrors.username ? (
+          <p id="username-error" className="text-xs text-red-600">
+            {fieldErrors.username}
+          </p>
+        ) : (
+          <p className="text-xs text-neutral-500">3–30 caracteres. Solo letras, números y guiones bajos.</p>
+        )}
       </div>
 
       <div className="space-y-1">

@@ -43,20 +43,23 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
 
 export async function updateProfileById(
   userId: string,
-  updates: Pick<ProfileRow, "username" | "bio" | "reading_goal"> & {
-    avatar_url?: string | null;
+  updates: {
+    username?: ProfileRow["username"];
+    bio?: ProfileRow["bio"];
+    reading_goal?: ProfileRow["reading_goal"];
+    avatar_url?: ProfileRow["avatar_url"];
   }
 ): Promise<ProfileRow> {
   const updatePayload: {
-    username: ProfileRow["username"];
-    bio: ProfileRow["bio"];
-    reading_goal: ProfileRow["reading_goal"];
+    username?: ProfileRow["username"];
+    bio?: ProfileRow["bio"];
+    reading_goal?: ProfileRow["reading_goal"];
     avatar_url?: ProfileRow["avatar_url"];
-  } = {
-    username: updates.username,
-    bio: updates.bio,
-    reading_goal: updates.reading_goal,
-  };
+  } = {};
+
+  if (updates.username !== undefined) updatePayload.username = updates.username;
+  if (updates.bio !== undefined) updatePayload.bio = updates.bio;
+  if (updates.reading_goal !== undefined) updatePayload.reading_goal = updates.reading_goal;
 
   if (updates.avatar_url !== undefined) { // avatar is optional
     updatePayload.avatar_url = updates.avatar_url;

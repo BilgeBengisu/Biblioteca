@@ -80,7 +80,7 @@ export const Register = () => {
             type="text"
             value={username}
             name="username"
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value.toLowerCase())}
             placeholder="Nombre de usuario"
             required
             ref={usernameInputRef}
