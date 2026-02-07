@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ProfileRow } from "../types/Profile";
 import { uploadAvatar } from "../services/storage";
 
@@ -35,6 +35,7 @@ export const EditProfileForm = ({
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -63,6 +64,11 @@ export const EditProfileForm = ({
   // Handle avatar upload
   const handleAvatarUpload = async () => {
     if (!avatarFile) return;
+    if (!["image/jpeg", "image/png"].includes(avatarFile.type)) {
+      setErrorMsg("Solo se permiten imágenes JPG o PNG.");
+      setAvatarFile(null);
+      return;
+    }
 
     setIsUploadingAvatar(true);
     setErrorMsg(null);
@@ -185,11 +191,35 @@ export const EditProfileForm = ({
 
             <div className="flex-1 space-y-2">
                 <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)}
-                    className="block w-full text-sm"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    if (file && !["image/jpeg", "image/png"].includes(file.type)) {
+                      setErrorMsg("Solo se permiten imágenes JPG o PNG.");
+                      setAvatarFile(null);
+                      e.currentTarget.value = "";
+                      return;
+                    }
+                    setErrorMsg(null);
+                    setAvatarFile(file);
+                  }}
+                  className="sr-only"
                 />
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  >
+                    Elegir archivo
+                  </button>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-300">
+                    {avatarFile ? avatarFile.name : "Ningún archivo seleccionado"}
+                  </span>
+                </div>
 
                 <div className="flex items-center gap-2">
                   <button
