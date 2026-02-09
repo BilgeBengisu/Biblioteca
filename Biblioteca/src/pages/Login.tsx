@@ -40,7 +40,12 @@ export const Login = () => {
                     const { error } = await signInWithPassword(email, password);
 
                     if (error) {
-                        setError(error.message);
+                        if (error.message === "Email not confirmed") {
+                            setError("Confirma tu correo")
+                        }
+                        else {  
+                            setError(error.message);
+                        }
                         setLoading(false);
                         return;
                     }

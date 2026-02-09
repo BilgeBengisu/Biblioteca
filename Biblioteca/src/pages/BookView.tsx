@@ -218,6 +218,7 @@ export const BookView = () => {
                                 onDelete={handlePostDeleted}
                                 onToggleLike={handleToggleLike}
                                 showBookInline={false}
+                                commentCompact={true}
                             />
                         ))}
                     </div>

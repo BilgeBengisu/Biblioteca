@@ -41,3 +41,21 @@
 .login-form button:hover {
   background-color: #00bfff;
 }
+
+.login-error {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+
+  background-color: #fee2e2; /* soft red */
+  color: #991b1b;            /* deep red text */
+
+  font-size: 0.9rem;
+  line-height: 1.4;
+
+  border: 1px solid #fecaca;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

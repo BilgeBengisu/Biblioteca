@@ -1,17 +1,21 @@
 import type { Post } from "../types/Post";
 import default_avatar from "../assets/default-avatar.svg";
 import { useAuth } from "../contexts/AuthContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { deletePost } from "../services/posts";
+import { getCommentCountByPostId } from "../services/comments";
 import { Link } from "react-router-dom";
 import { StarRating } from "./StarRating";
 import { BookInlineCard } from "./BookInlineCard";
+import { CommentThread } from "./CommentThread";
 
 type PostCardProps = {
   post: Post;
   onDelete: (deletedPostId: string) => void;// this is to notify parent on deletion so the ui can be updated
   onToggleLike: (postId: string, currentlyLiked: boolean) => void;
   showBookInline?: boolean;
+  showComments?: boolean;
+  commentCompact?: boolean;
 };
 
 export const PostCard = ({
@@ -19,6 +23,8 @@ export const PostCard = ({
   onDelete,
   onToggleLike,
   showBookInline = true,
+  showComments = true,
+  commentCompact = false,
 }: PostCardProps) => {
   // getting the currently logged user
   const { user } = useAuth();
@@ -36,6 +42,21 @@ export const PostCard = ({
   : undefined;
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [commentCount, setCommentCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!showComments) return;
+
+    getCommentCountByPostId(post.id).then((count) => {
+      if (!cancelled) setCommentCount(count);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [post.id, showComments]);
 
   const handleDelete = async () => {
     if (!user) return; // just in case
@@ -150,17 +171,57 @@ export const PostCard = ({
       
       {/* Footer */}
       <div className="flex items-center gap-2 pt-2">
-        <button    
-          type="button"
-          onClick={() => onToggleLike(post.id, post.liked_by_me ?? false)}
-          className={`cursor-pointer inline-flex items-center gap-2 text-primary dark:text-gray-300 hover:text-red-500`}
-        > 
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={`icon-lg w-5 h-5 ${post.liked_by_me ? 'fill-red-500 dark:fill-red-500' : 'fill-gray-700 dark:fill-gray-300'} hover:fill-red-500 dark:hover:fill-red-500 hover:rotate-3 transition-all`} >
-            <path d="m225.8 468.2-2.5-2.3L48.1 303.2A150.6 150.6 0 0 1 0 192.8v-3.3c0-70.4 50-130.8 119.2-144A146.2 146.2 0 0 1 256 91.9c4.2-4.8 8.7-9.2 13.5-13.3a146.67 146.67 0 0 1 123.3-33.2A146.7 146.7 0 0 1 512 189.5v3.3c0 41.9-17.4 81.9-48.1 110.4L288.7 465.9l-2.5 2.3c-8.2 7.6-19 11.9-30.2 11.9s-22-4.2-30.2-11.9M239.1 145c-.4-.3-.7-.7-1-1.1l-17.8-20-.1-.1a98.4 98.4 0 0 0-92-31.2A98.6 98.6 0 0 0 48 189.5v3.3c0 28.5 11.9 55.8 32.8 75.2L256 430.7 431.2 268a102.7 102.7 0 0 0 32.8-75.2v-3.3c0-47.3-33.6-88-80.1-96.9-34-6.5-69 5.4-92 31.2l-.1.1-.1.1-17.8 20c-.3.4-.7.7-1 1.1a23.9 23.9 0 0 1-33.8 0z"></path> 
-          </svg>
-          {post.like_count || 0}
-        </button>
+        <div>
+          <button    
+            type="button"
+            onClick={() => onToggleLike(post.id, post.liked_by_me ?? false)}
+            className={`cursor-pointer inline-flex items-center gap-2 text-primary dark:text-gray-300 hover:text-red-500`}
+          > 
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={`icon-lg w-5 h-5 ${post.liked_by_me ? 'fill-red-500 dark:fill-red-500' : 'fill-gray-700 dark:fill-gray-300'} hover:fill-red-500 dark:hover:fill-red-500 hover:rotate-3 transition-all`} >
+              <path d="m225.8 468.2-2.5-2.3L48.1 303.2A150.6 150.6 0 0 1 0 192.8v-3.3c0-70.4 50-130.8 119.2-144A146.2 146.2 0 0 1 256 91.9c4.2-4.8 8.7-9.2 13.5-13.3a146.67 146.67 0 0 1 123.3-33.2A146.7 146.7 0 0 1 512 189.5v3.3c0 41.9-17.4 81.9-48.1 110.4L288.7 465.9l-2.5 2.3c-8.2 7.6-19 11.9-30.2 11.9s-22-4.2-30.2-11.9M239.1 145c-.4-.3-.7-.7-1-1.1l-17.8-20-.1-.1a98.4 98.4 0 0 0-92-31.2A98.6 98.6 0 0 0 48 189.5v3.3c0 28.5 11.9 55.8 32.8 75.2L256 430.7 431.2 268a102.7 102.7 0 0 0 32.8-75.2v-3.3c0-47.3-33.6-88-80.1-96.9-34-6.5-69 5.4-92 31.2l-.1.1-.1.1-17.8 20c-.3.4-.7.7-1 1.1a23.9 23.9 0 0 1-33.8 0z"></path> 
+            </svg>
+            {post.like_count || 0}
+          </button>
+        </div>
+        {showComments && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setIsCommentsOpen((v) => !v)}
+              aria-expanded={isCommentsOpen}
+              className="inline-flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-blue-500"
+            >
+              <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+              >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span className="text-xs text-neutral-600">
+                {commentCount ?? "…"}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {showComments && isCommentsOpen && (
+        <div className="pt-3 border-t border-neutral-100">
+          <CommentThread
+            postId={post.id}
+            compact={commentCompact}
+            maxDepth={5}
+            onCountChange={setCommentCount}
+            initialCount={commentCount}
+          />
+        </div>
+      )}
     </article>
   );
 };

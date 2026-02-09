@@ -149,6 +149,7 @@ export const ProfileTabView = ({
                     post={post}
                     onDelete={onPostDeleted}
                     onToggleLike={onPostToggleLike}
+                    commentCompact={true}
                   />
                 ))
               )}
