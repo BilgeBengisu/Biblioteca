@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { PostBook } from "../types/Post";
 
 export const BookInlineCard = ({
@@ -10,9 +10,16 @@ export const BookInlineCard = ({
   rightSlot?: React.ReactNode; // TODO: rating, status badge, etc.
   className?: string;
 }) => {
+  const location = useLocation();
+
   return (
     <Link
       to={book?.slug ? `/books/${book.slug}` : "#"}
+      state={
+        book?.slug
+          ? { from: `${location.pathname}${location.search}` }
+          : undefined
+      }
       className={`flex items-center gap-3 hover:opacity-80 ${className}`}
       onClick={(e) => {
         if (!book?.slug) e.preventDefault();

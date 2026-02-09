@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { BooksData } from "../types/Book";
 import { useQuery } from "@apollo/client/react";
 import { GET_BOOK_BY_SLUG } from "../queries/queries";
@@ -15,8 +15,9 @@ import { BookStatusSelect } from "../components/BookStatusSelect";
 export const BookView = () => {
     const { id } = useParams<{ id: string }>();
     const { user } = useAuth();
-    // for returning to previous page
-    //const navigate = useNavigate();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const from = (location.state as { from?: string } | null)?.from;
 
     // finding the book to display using the id param (slug)
     const { data, loading, error } = useQuery<BooksData>(GET_BOOK_BY_SLUG, {
@@ -122,6 +123,21 @@ export const BookView = () => {
 
     return (
         <div>
+            <div className="mb-4">
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (from) {
+                            navigate(from);
+                            return;
+                        }
+                        navigate(-1);
+                    }}
+                    className="text-sm text-neutral-700 hover:text-neutral-900"
+                >
+                    ← Volver
+                </button>
+            </div>
             <div className="flex gap-6 relative">
                 <img src={book?.cover} alt={book?.title} className="h-64 rounded-lg" />
                 <div className="flex-1 flex justify-between items-center">

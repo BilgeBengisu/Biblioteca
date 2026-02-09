@@ -1,5 +1,5 @@
 import type { BookData, BooksData } from '../types/Book';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { BookCard } from '../components/BookCard';
 import { useQuery } from '@apollo/client/react';
 import { GET_BOOKS } from '../queries/queries';
@@ -10,6 +10,7 @@ const SKELETON_COUNT = 10; // number of book skeletons to show
 
 export const Books: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const { data, loading, error } = useQuery<BooksData>(GET_BOOKS);
 
@@ -69,7 +70,13 @@ export const Books: React.FC = () => {
                             <BookCard
                                 key={book.slug}
                                 book={book}
-                                onClick={() => navigate(`/books/${book.slug}`)}
+                                onClick={() =>
+                                    navigate(`/books/${book.slug}`, {
+                                        state: {
+                                            from: `${location.pathname}${location.search}`,
+                                        },
+                                    })
+                                }
                             />
                         ))}
                     </div>

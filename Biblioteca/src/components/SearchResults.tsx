@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { SearchState, BookResult, UserResult } from "../types/Search";
 import type { BookData } from "../types/Book";
 import { BookCard } from "./BookCard";
@@ -6,6 +6,7 @@ import { UserCard } from "./UserCard";
 
 export function SearchResults({ state }: { state: SearchState }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // no need to search, no input yet
   if (state.status === "idle") {
@@ -34,7 +35,11 @@ export function SearchResults({ state }: { state: SearchState }) {
               onClick={
                 b.slug
                   ? () => {
-                      navigate(`/books/${b.slug}`);
+                      navigate(`/books/${b.slug}`, {
+                        state: {
+                          from: `${location.pathname}${location.search}`,
+                        },
+                      });
                     }
                   : undefined
               }
