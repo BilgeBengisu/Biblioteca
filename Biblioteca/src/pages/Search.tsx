@@ -19,7 +19,7 @@ export const Search = () => {
   const { state } = useSearch(scope, query);
 
   return (
-    <main className="search-page">
+    <main className="search-page mt-6 mb-10 px-4 sm:px-6 lg:px-8">
       <h1>Buscar</h1>
 
       <SearchControls
@@ -28,7 +28,9 @@ export const Search = () => {
         onScopeChange={(s) => setParams({ scope: s, q: query })}
         onQueryChange={(q) => setParams({ scope, q })}
       />
-      <SearchResults state={state} />
+      <div className="mt-6 mb-10 px-4 sm:px-6 lg:px-8">
+        <SearchResults state={state} />
+      </div>
     </main>
   );
 };

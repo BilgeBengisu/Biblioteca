@@ -31,8 +31,7 @@ export const Books: React.FC = () => {
     );
 
     return (
-        <div>
-            <h1>Libros</h1>
+        <div className="px-4sm:px-6 lg:px-8 mt-6 mb-10">
             <div className="flex items-center gap-2 mb-6">
             <span className="text-sm text-neutral-600">Minimum rating:</span>
 
