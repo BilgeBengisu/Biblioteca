@@ -32,14 +32,19 @@ export const CommentThread = ({
   } = useComments(postId);
 
   const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const tree = useMemo(() => buildCommentTree(comments), [comments]);
   const count = comments.length;
   const displayCount = loading && initialCount != null ? initialCount : count;
 
   useEffect(() => {
-    if (!loading && onCountChange) onCountChange(count);
-  }, [count, loading, onCountChange]);
+    if (!loading) setHasLoadedOnce(true);
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loading && hasLoadedOnce && onCountChange) onCountChange(count);
+  }, [count, hasLoadedOnce, loading, onCountChange]);
 
   const handleCancelAction = () => {
     setReplyToId(null);
