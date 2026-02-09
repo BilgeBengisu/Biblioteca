@@ -27,12 +27,11 @@ export const CommentThread = ({
     error,
     refresh,
     addComment,
-    updateComment,
     deleteComment,
+    toggleLike,
   } = useComments(postId);
 
   const [replyToId, setReplyToId] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
 
   const tree = useMemo(() => buildCommentTree(comments), [comments]);
   const count = comments.length;
@@ -44,7 +43,6 @@ export const CommentThread = ({
 
   const handleCancelAction = () => {
     setReplyToId(null);
-    setEditId(null);
   };
 
   const handleSubmitNew = async (content: string) => {
@@ -56,15 +54,14 @@ export const CommentThread = ({
     handleCancelAction();
   };
 
-  const handleSubmitEdit = async (commentId: string, content: string) => {
-    await updateComment({ id: commentId, content, userId: user?.id });
-    handleCancelAction();
-  };
-
   const handleDelete = async (commentId: string) => {
     if (!confirm("¿Eliminar comentario?")) return;
     await deleteComment(commentId, user?.id);
     await refresh();
+  };
+
+  const handleToggleLike = async (commentId: string, currentlyLiked: boolean) => {
+    await toggleLike(commentId, currentlyLiked, user?.id);
   };
 
   return (
@@ -96,18 +93,12 @@ export const CommentThread = ({
         maxDepth={maxDepth}
         currentUserId={user?.id}
         replyToId={replyToId}
-        editId={editId}
         onReply={(id) => {
           setReplyToId(id);
-          setEditId(null);
-        }}
-        onEdit={(id) => {
-          setEditId(id);
-          setReplyToId(null);
         }}
         onDelete={handleDelete}
+        onToggleLike={handleToggleLike}
         onSubmitReply={handleSubmitReply}
-        onSubmitEdit={handleSubmitEdit}
         onCancelAction={handleCancelAction}
       />
     </section>

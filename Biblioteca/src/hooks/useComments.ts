@@ -1,23 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Comment } from "../types/Comment";
+import type { Comment, CreateCommentInput } from "../types/Comment";
 import {
   createComment,
   deleteComment,
   getCommentsByPostId,
-  updateComment,
+  likeComment,
+  unlikeComment,
 } from "../services/comments";
-
-type CreateArgs = {
-  postId: string;
-  content: string;
-  parentId?: string | null;
-};
-
-type UpdateArgs = {
-  id: string;
-  content: string;
-  userId?: string;
-};
 
 export function useComments(postId: string) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -44,7 +33,7 @@ export function useComments(postId: string) {
   }, [refresh]);
 
   const add = useCallback(
-    async (input: CreateArgs) => {
+    async (input: CreateCommentInput) => {
       setError(null);
       const created = await createComment(input);
       setComments((prev) => [created, ...prev]);
@@ -53,18 +42,45 @@ export function useComments(postId: string) {
     []
   );
 
-  const update = useCallback(async (input: UpdateArgs) => {
-    setError(null);
-    const updated = await updateComment(input);
-    setComments((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-    return updated;
-  }, []);
-
   const remove = useCallback(async (commentId: string, userId?: string) => {
     setError(null);
     await deleteComment(commentId, userId);
     setComments((prev) => prev.filter((c) => c.id !== commentId));
   }, []);
+
+  const toggleLike = useCallback(
+    async (commentId: string, currentlyLiked: boolean, userId?: string) => {
+      if (!userId) return;
+
+      setComments((prev) =>
+        prev.map((c) => {
+          if (c.id !== commentId) return c;
+          const nextLiked = !currentlyLiked;
+          const currentCount = c.like_count ?? 0;
+          const nextCount = nextLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
+          return { ...c, liked_by_me: nextLiked, like_count: nextCount };
+        })
+      );
+
+      try {
+        if (currentlyLiked) await unlikeComment(commentId, userId);
+        else await likeComment(commentId, userId);
+      } catch (err) {
+        console.error(err);
+        setComments((prev) =>
+          prev.map((c) => {
+            if (c.id !== commentId) return c;
+            const currentCount = c.like_count ?? 0;
+            const revertedCount = currentlyLiked
+              ? currentCount + 1
+              : Math.max(0, currentCount - 1);
+            return { ...c, liked_by_me: currentlyLiked, like_count: revertedCount };
+          })
+        );
+      }
+    },
+    []
+  );
 
   return {
     comments,
@@ -72,7 +88,7 @@ export function useComments(postId: string) {
     error,
     refresh,
     addComment: add,
-    updateComment: update,
     deleteComment: remove,
+    toggleLike,
   };
 }

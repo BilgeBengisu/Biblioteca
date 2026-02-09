@@ -1,5 +1,5 @@
 import { supabase } from "../supabase-client";
-import type { Comment, CreateCommentInput, UpdateCommentInput } from "../types/Comment";
+import type { Comment, CreateCommentInput } from "../types/Comment";
 
 const commentSelect = `
   id,
@@ -28,7 +28,41 @@ export async function getCommentsByPostId(postId: string): Promise<Comment[]> {
     return [];
   }
 
-  return (data ?? []).map(mapComment);
+  const comments = (data ?? []).map(mapComment);
+  if (comments.length === 0) return comments;
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) console.error(userError);
+
+  const commentIds = comments.map((c) => c.id);
+
+  const { data: likesData, error: likesError } = await supabase
+    .from("comment_likes")
+    .select("comment_id, user_id")
+    .in("comment_id", commentIds);
+
+  if (likesError) {
+    console.error(likesError);
+    return comments;
+  }
+
+  const likeCounts = new Map<string, number>();
+  const likedByMe = new Set<string>();
+
+  for (const like of likesData ?? []) {
+    likeCounts.set(like.comment_id, (likeCounts.get(like.comment_id) ?? 0) + 1);
+    if (user?.id && like.user_id === user.id) likedByMe.add(like.comment_id);
+  }
+
+  return comments.map((comment) => ({
+    ...comment,
+    like_count: likeCounts.get(comment.id) ?? 0,
+    liked_by_me: user?.id ? likedByMe.has(comment.id) : false,
+  }));
 }
 
 export async function getCommentCountByPostId(postId: string): Promise<number> {
@@ -70,24 +104,11 @@ export async function createComment(input: CreateCommentInput): Promise<Comment>
 
   if (error) throw error;
 
-  return mapComment(data);
-}
-
-export async function updateComment(input: UpdateCommentInput): Promise<Comment> {
-  const { id, content, userId } = input;
-
-  let query = supabase
-    .from("comments")
-    .update({ content, updated_at: new Date().toISOString() })
-    .eq("id", id);
-
-  if (userId) query = query.eq("user_id", userId);
-
-  const { data, error } = await query.select(commentSelect).single();
-
-  if (error) throw error;
-
-  return mapComment(data);
+  return {
+    ...mapComment(data),
+    like_count: 0,
+    liked_by_me: false,
+  };
 }
 
 export async function deleteComment(commentId: string, userId?: string): Promise<void> {
@@ -99,6 +120,24 @@ export async function deleteComment(commentId: string, userId?: string): Promise
   if (userId) query = query.eq("user_id", userId);
 
   const { error } = await query;
+
+  if (error) throw error;
+}
+
+export async function likeComment(commentId: string, userId: string) {
+  const { error } = await supabase
+    .from("comment_likes")
+    .insert({ comment_id: commentId, user_id: userId });
+
+  if (error) throw error;
+}
+
+export async function unlikeComment(commentId: string, userId: string) {
+  const { error } = await supabase
+    .from("comment_likes")
+    .delete()
+    .eq("comment_id", commentId)
+    .eq("user_id", userId);
 
   if (error) throw error;
 }

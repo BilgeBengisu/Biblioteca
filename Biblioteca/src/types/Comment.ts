@@ -13,17 +13,12 @@ export type Comment = {
   created_at: string;
   updated_at: string;
   author?: CommentAuthor;
+  like_count?: number | null;
+  liked_by_me?: boolean;
 };
-
 
 export type CreateCommentInput = {
   postId: string;
   content: string;
   parentId?: string | null;
-};
-
-export type UpdateCommentInput = {
-  id: string;
-  content: string;
-  userId?: string;
 };

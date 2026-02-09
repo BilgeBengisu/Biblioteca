@@ -1,13 +1,17 @@
 import type { Comment } from "../types/Comment";
 
+// services for comment functionalities
+
 export type CommentNode = Comment & { children: CommentNode[] };
 
+// to display replies to comments
 const byNewest = (a: CommentNode, b: CommentNode) => {
   const ta = new Date(a.created_at).getTime();
   const tb = new Date(b.created_at).getTime();
   return tb - ta;
 };
 
+// to display post comments
 const byOldest = (a: CommentNode, b: CommentNode) => {
   const ta = new Date(a.created_at).getTime();
   const tb = new Date(b.created_at).getTime();

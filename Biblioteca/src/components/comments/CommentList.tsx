@@ -8,12 +8,10 @@ type CommentListProps = {
   maxDepth: number;
   currentUserId?: string | null;
   replyToId?: string | null;
-  editId?: string | null;
   onReply: (commentId: string) => void;
-  onEdit: (commentId: string) => void;
   onDelete: (commentId: string) => void;
+  onToggleLike: (commentId: string, currentlyLiked: boolean) => void;
   onSubmitReply: (parentId: string, content: string) => Promise<void>;
-  onSubmitEdit: (commentId: string, content: string) => Promise<void>;
   onCancelAction: () => void;
 };
 
@@ -23,12 +21,10 @@ export const CommentList = ({
   maxDepth,
   currentUserId,
   replyToId,
-  editId,
   onReply,
-  onEdit,
   onDelete,
+  onToggleLike,
   onSubmitReply,
-  onSubmitEdit,
   onCancelAction,
 }: CommentListProps) => {
   if (nodes.length === 0) return null;
@@ -37,7 +33,6 @@ export const CommentList = ({
     <div className="space-y-3">
       {nodes.map((node) => {
         const canReply = depth < maxDepth;
-        const canEdit = !!currentUserId && node.user_id === currentUserId;
         const canDelete = !!currentUserId && node.user_id === currentUserId;
 
         return (
@@ -45,24 +40,11 @@ export const CommentList = ({
             <CommentItem
               comment={node}
               canReply={canReply}
-              canEdit={canEdit}
               canDelete={canDelete}
               onReply={onReply}
-              onEdit={onEdit}
               onDelete={onDelete}
+              onToggleLike={onToggleLike}
             />
-
-            {editId === node.id && (
-              <div className="mt-2 ml-10">
-                <CommentComposer
-                  initialValue={node.content}
-                  placeholder="Edita tu comentario..."
-                  submitLabel="Guardar"
-                  onCancel={onCancelAction}
-                  onSubmit={(content) => onSubmitEdit(node.id, content)}
-                />
-              </div>
-            )}
 
             {replyToId === node.id && canReply && (
               <div className="mt-2 ml-10">
@@ -83,12 +65,10 @@ export const CommentList = ({
                   maxDepth={maxDepth}
                   currentUserId={currentUserId}
                   replyToId={replyToId}
-                  editId={editId}
                   onReply={onReply}
-                  onEdit={onEdit}
                   onDelete={onDelete}
+                  onToggleLike={onToggleLike}
                   onSubmitReply={onSubmitReply}
-                  onSubmitEdit={onSubmitEdit}
                   onCancelAction={onCancelAction}
                 />
               </div>
