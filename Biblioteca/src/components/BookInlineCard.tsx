@@ -15,8 +15,8 @@ export const BookInlineCard = ({
   return (
     <Link
       to={book?.slug ? `/books/${book.slug}` : "#"}
-      state={
-        book?.slug
+      state={ // passing the pathname as location state
+        book?.slug 
           ? { from: `${location.pathname}${location.search}` }
           : undefined
       }

@@ -27,6 +27,7 @@ export async function searchBooks(query: string, signal?: AbortSignal): Promise<
     author: book.contributions?.[0]?.author?.name ?? null,
     coverUrl: book.image?.url ?? null,
     slug: book.slug ?? null,
+    rating: book.rating ?? null,
   }));
 }
 

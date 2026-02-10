@@ -20,6 +20,7 @@ export type BookResult = {
   author?: string | null;
   coverUrl?: string | null;
   slug?: string | null;
+  rating?: number | null;
 };
 
 export type UserResult = {

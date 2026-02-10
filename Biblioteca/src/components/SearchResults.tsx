@@ -76,6 +76,6 @@ function mapSearchBookToCard(book: BookResult): BookData {
     contributions: book.author
       ? [{ author: { name: book.author } }]
       : undefined,
-    rating: null,
+    rating: book.rating ?? null,
   };
 }
