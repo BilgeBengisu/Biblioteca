@@ -137,20 +137,22 @@ export const PostCard = ({
                 {status === "finished" && "Terminado"}
               </span>
             )}
-            {/* Review Label */}
+            {/* Review header row */}
             {type === "review" && (
-              <span className="font-semibold text-blue-600 dark:text-blue-400">
-                Compartió sobre
-              </span>
+              <div className="flex items-start justify-between gap-3">
+                <span className="font-semibold text-blue-600 dark:text-blue-400">
+                  Compartió sobre
+                </span>
+                {post.rating != null ? (
+                  <StarRating rating={post.rating} variant="chip" label="Tu calificacion" />
+                ) : null}
+              </div>
             )}
 
             {/* Book display */}
             {showBookInline && book && (
               <BookInlineCard
                 book={book}
-                rightSlot={
-                  type === "review" && post.rating != null ? <StarRating rating={post.rating} /> : null
-                }
               />
             )}
             {/* Status or Review Content */}
@@ -158,12 +160,6 @@ export const PostCard = ({
               <p className="text-sm text-neutral-800 dark:text-neutral-100 whitespace-pre-wrap">
                 {post.content}
               </p>
-            )}
-            {/* Fallback: review rating if somehow no book_data came through */}
-            {type === "review" && !book && post.rating != null && (
-              <div className="mt-1">
-                <StarRating rating={post.rating} />
-              </div>
             )}
           </div>
         )}
