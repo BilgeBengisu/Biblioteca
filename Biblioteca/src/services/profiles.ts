@@ -9,6 +9,7 @@ export async function getProfileById(userId: string): Promise<ProfileRow | null>
     .from("profiles")
     .select("*")
     .eq("id", userId)
+    .limit(1)
     .maybeSingle(); // in case profile does not exist
 
   if (error) {
@@ -24,9 +25,10 @@ export async function getProfileByUsername(username: string): Promise<ProfileRow
     .from("profiles")
     .select("*")
     .eq("username", username)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data as ProfileRow;
 }
 
@@ -35,6 +37,7 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
     .from("profiles")
     .select("id")
     .eq("username", username)
+    .limit(1)
     .maybeSingle();
 
   if (error) throw error;
