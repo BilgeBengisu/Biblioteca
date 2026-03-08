@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
 import { getPosts } from "../services/posts";
 import type { Post } from "../types/Post";
 

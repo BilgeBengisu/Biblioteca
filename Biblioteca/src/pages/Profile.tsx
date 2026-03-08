@@ -1,10 +1,7 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
-import type { UserBookRow } from "../types/Profile";
-import type { Post } from "../types/Post";
 import { useState, useEffect } from "react";
-import { getUserBooksByUserId, updateProfileById } from "../services/profiles";
-import { getPosts } from "../services/posts";
+import { updateProfileById } from "../services/profiles";
 import { EditProfileForm } from "../components/EditProfileForm";
 import { ProfileTabView } from "../components/ProfileTabView";
 import { useParams } from "react-router-dom";
@@ -13,6 +10,7 @@ import { FollowCounts } from "../components/FollowCounts";
 import { useToggleLike } from "../hooks/useToggleLike";
 import { useProfile } from "../hooks/useProfile";
 import { usePosts } from "../hooks/usePosts";
+import { useLibrary } from "../hooks/useLibrary";
 
 
 export const Profile = () => {
@@ -29,62 +27,25 @@ export const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [followRefreshKey, setFollowRefreshKey] = useState(0); // to refresh the follower count
     const [activeTab, setActiveTab] = useState<"library" | "posts">("library");
-    const [libraryLoading, setLibraryLoading] = useState(false);
-    const [libraryError, setLibraryError] = useState<string | null>(null);
-    const [library, setLibrary] = useState<{
-        want_to_read: UserBookRow[];
-        reading: UserBookRow[];
-        finished: UserBookRow[];
-    }>({
-        want_to_read: [],
-        reading: [],
-        finished: [],
-    });
-
+    /**
+     * posts: the posts made by the user whose profile is being viewed
+     * postsLoading: true if the posts are being loaded, false otherwise
+     * postsError: error message if there was an error loading the posts, null otherwise
+     */
     const { posts, setPosts, postsLoading, postsError } = usePosts(profile?.id, activeTab === "posts");
     const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
+
+    /**
+     * library: the books in the user's library, grouped by status (want_to_read, reading, finished)
+     * libraryLoading: true if the library data is being loaded, false otherwise
+     * libraryError: error message if there was an error loading the library, null otherwise
+     */
+    const { library, libraryLoading, libraryError } = useLibrary(profile?.id, activeTab === "library");
 
     // don't carry the refresh key for follower count to other profiles
     useEffect(() => {
         setFollowRefreshKey(0);
     }, [profile?.id]);
-
-    // useEffect to load library tab on mounting (the library tab is default)
-    useEffect(() => {
-        if (!user) return;
-
-        let isMounted = true;
-
-        (async () => {
-            setLibraryLoading(true);
-            setLibraryError(null);
-
-            try {
-            if (!profile?.id) return;
-            const rows = await getUserBooksByUserId(profile.id);
-
-            const grouped = {
-                want_to_read: rows.filter((r) => r.status === "want_to_read"),
-                reading: rows.filter((r) => r.status === "reading"),
-                finished: rows.filter((r) => r.status === "finished"),
-            };
-
-            if (isMounted) setLibrary(grouped);
-            } catch (err) {
-            const message = err instanceof Error ? err.message : "Error al cargar la biblioteca.";
-            if (isMounted) setLibraryError(message);
-            } finally {
-            if (isMounted) setLibraryLoading(false);
-            }
-        })();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [user, profile?.id]);
-
-
-    
 
     // If not logged in yet
     if (!user) {
