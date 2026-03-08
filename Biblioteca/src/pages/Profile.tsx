@@ -12,6 +12,7 @@ import { FollowButton } from "../components/FollowButton";
 import { FollowCounts } from "../components/FollowCounts";
 import { useToggleLike } from "../hooks/useToggleLike";
 import { useProfile } from "../hooks/useProfile";
+import { usePosts } from "../hooks/usePosts";
 
 
 export const Profile = () => {
@@ -39,10 +40,8 @@ export const Profile = () => {
         reading: [],
         finished: [],
     });
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [postsLoading, setPostsLoading] = useState(false);
-    const [postsError, setPostsError] = useState<string | null>(null);
-    const [postsLoadedFor, setPostsLoadedFor] = useState<string | null>(null);
+
+    const { posts, setPosts, postsLoading, postsError } = usePosts(profile?.id, activeTab === "posts");
     const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
 
     // don't carry the refresh key for follower count to other profiles
@@ -85,40 +84,7 @@ export const Profile = () => {
     }, [user, profile?.id]);
 
 
-    // useEffect to load the posts by the user, is only called if the active tab is posts
-    useEffect(() => {
-        if (activeTab !== "posts") return;
-        if (!profile?.id) return;
-        // if posts have already been loaded, don't load again
-        if (postsLoadedFor === profile.id) return;
-
-        // using isMounted variable to avoid setting states 
-        // if the page is unmounted (navigated to a different page)
-        let isMounted = true;
-        setPostsLoading(true);
-        setPostsError(null);
-
-        getPosts({ userId: profile.id })
-            .then((data) => {
-                if (!isMounted) return;
-                setPosts(data);
-                setPostsLoadedFor(profile.id);
-            })
-            .catch((err) => {
-                console.error(err);
-                if (!isMounted) return;
-                setPostsError("No se pudieron cargar las publicaciones");
-            })
-            .finally(() => {
-                if (!isMounted) return;
-                setPostsLoading(false);
-            });
-
-        // if the page is unmounted, react runs this cleanup
-        return () => {
-            isMounted = false;
-        };
-    }, [activeTab, profile?.id, postsLoadedFor]);
+    
 
     // If not logged in yet
     if (!user) {
