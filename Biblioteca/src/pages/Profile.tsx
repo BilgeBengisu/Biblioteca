@@ -42,11 +42,6 @@ export const Profile = () => {
      */
     const { library, libraryLoading, libraryError } = useLibrary(profile?.id, activeTab === "library");
 
-    // don't carry the refresh key for follower count to other profiles
-    useEffect(() => {
-        setFollowRefreshKey(0);
-    }, [profile?.id]);
-
     // If not logged in yet
     if (!user) {
         return (
@@ -72,7 +67,7 @@ export const Profile = () => {
         );
     }
 
-    // Error
+    // Error (network/server failure)
     if (profileError) {
         return (
             <div className="max-w-3xl mx-auto p-6">
@@ -83,13 +78,24 @@ export const Profile = () => {
         );
     }
 
+    // Error Not found (fetch succeeded but returned null)
+    if (!profile) {
+        return (
+            <div className="max-w-3xl mx-auto p-6">
+                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
+                    <p className="text-sm text-neutral-600">Perfil no encontrado.</p>
+                </div>
+            </div>
+        );
+    }
+
     // Displaying profile
     const avatar =
-        profile?.avatar_url ||
+        profile.avatar_url ||
         defaultAvatar;
     // setting display name
     const displayName =
-        profile?.username ||
+        profile.username ||
         "usuario";
 
     return (
@@ -102,7 +108,7 @@ export const Profile = () => {
             <div className="flex-1 min-w-0 space-y-2">
                 <div className="flex items-center justify-between gap-4">
                     <h1 className="text-2xl font-semibold tracking-tight truncate">{displayName}</h1>
-                    {profile?.id && !isOwnProfile && (
+                    {profile.id && !isOwnProfile && (
                     <FollowButton
                         viewerId={user.id}
                         profileId={profile.id}
@@ -125,9 +131,7 @@ export const Profile = () => {
                         userId={user.id}
                         avatarBucket="avatars"
                         currentAvatarUrl={profile.avatar_url}
-                        updateProfile={async (id, updates) => {
-                            return updateProfileById(id, updates); // make a call to Supabase to update profile here - keeps the EditProfileForm decoupled from Supabase call
-                        }}
+                        updateProfile={updateProfileById} // make a call to Supabase to update profile here - keeps the EditProfileForm decoupled from Supabase call
                         onCancel={() => setIsEditing(false)}
                         onSaved={(updated) => {
                         setProfile(updated);
@@ -142,14 +146,14 @@ export const Profile = () => {
                         {isOwnProfile && ( // can't view email unless on your own profile
                         <p className="text-sm text-neutral-600 truncate">{user.email}</p>
                         )}
-                        {profile?.id && 
+                        {profile.id && 
                         <FollowCounts 
                             profileId={profile.id} 
                             refreshKey={followRefreshKey} 
                             className="mt-1" 
                         />}
 
-                        {profile?.bio && (
+                        {profile.bio && (
                         <p className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-pre-line">
                             {profile.bio}
                         </p>
@@ -158,7 +162,7 @@ export const Profile = () => {
                         <div className="text-sm text-neutral-600">
                         Meta de Lectura:{" "}
                         <span className="font-medium">
-                            {profile?.reading_goal ?? "Establecer Meta de Lectura"}
+                            {profile.reading_goal ?? "Establecer Meta de Lectura"}
                         </span>
                         </div>
                     </>
@@ -167,23 +171,21 @@ export const Profile = () => {
         </div>
 
         {/* Tabs */}
-        <div className="mt-4">
-            <div className="mt-6">
-                <ProfileTabView
-                    activeTab={activeTab}
-                    onChange={setActiveTab}
-                    library={library}
-                    libraryLoading={libraryLoading}
-                    libraryError={libraryError}
-                    posts={posts}
-                    postsLoading={postsLoading}
-                    postsError={postsError}
-                    onPostDeleted={(deletedPostId) => {
-                        setPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
-                    }}
-                    onPostToggleLike={handleToggleLike}
-                />
-            </div>
+        <div className="mt-6">
+            <ProfileTabView
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                library={library}
+                libraryLoading={libraryLoading}
+                libraryError={libraryError}
+                posts={posts}
+                postsLoading={postsLoading}
+                postsError={postsError}
+                onPostDeleted={(deletedPostId) => {
+                    setPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
+                }}
+                onPostToggleLike={handleToggleLike}
+            />
         </div>
     </div>
   );
