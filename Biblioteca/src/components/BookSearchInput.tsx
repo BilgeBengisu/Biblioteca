@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { SEARCH_BOOKS } from "../queries/queries";
-import { apolloClient } from "../contexts/ApolloClient.tsx";
-import type { SearchBooksVariables, SearchResponse } from "../types/Search";
+import { searchBooks } from "../services/search";
 
 export type SearchBook = {
   id: string;
@@ -30,42 +28,14 @@ export const BookSearchInput = ({ value, onChange }: BookSearchInputProps) => {
     }
   }, [value]);
 
-  async function fetchBooks(query: string): Promise<SearchBook[]> {
-    if (!query.trim()) return [];
-
-    setIsSearching(true);
-    try {
-      const response = await apolloClient.query<SearchResponse, SearchBooksVariables>({
-        query: SEARCH_BOOKS,
-        variables: { query: query, perPage: 5, page: 1 },
-        fetchPolicy: "no-cache",
-      });
-
-      const hits = response?.data?.search?.results?.hits?.map((hit: any) => hit.document).filter(Boolean) ?? [];
-
-      return hits.map((book: any) => ({
-        id: book.id,
-        title: book.title,
-        author: book.contributions?.[0]?.author?.name || "Unknown",
-        coverUrl: book.image?.url || "/default-book-cover.png",
-        slug: book.slug,
-      })) as SearchBook[];
-    } catch (err) {
-      console.error("Error fetching books:", err);
-      return [];
-    } finally {
-      setIsSearching(false);
-    }
-  }
-
-  const handleChange = async (value: string) => {
+  const handleChange = (value: string) => {
     setQuery(value);
     setHasSearched(false);
     // If user starts typing, clear selected book in parent component
-    if (value && query.trim().length > 0) onChange(null); // value = SearchBook
+    if (value && query.trim().length > 0) onChange(null);
   };
 
-  // debounce search effect
+  // debounce search effect with abort support
   useEffect(() => {
     if (!query.trim()) {
         setSearchResults([]);
@@ -73,16 +43,29 @@ export const BookSearchInput = ({ value, onChange }: BookSearchInputProps) => {
         return;
     }
 
-    let cancelled = false;
+    const controller = new AbortController();
 
     const timeoutId = window.setTimeout(async () => {
+        setIsSearching(true);
         setHasSearched(true);
-        const results = await fetchBooks(query);
-        if (!cancelled) setSearchResults(results);
+        try {
+            const results = await searchBooks(query.trim(), controller.signal, 5);
+            setSearchResults(results.map((book) => ({
+                id: String(book.id),
+                title: book.title,
+                author: book.author ?? undefined,
+                coverUrl: book.coverUrl ?? undefined,
+                slug: book.slug ?? undefined,
+            })));
+        } catch (err: any) {
+            if (err?.name !== "AbortError") console.error("Error fetching books:", err);
+        } finally {
+            setIsSearching(false);
+        }
     }, 300);
 
     return () => {
-        cancelled = true;
+        controller.abort();
         window.clearTimeout(timeoutId);
     };
   }, [query]);

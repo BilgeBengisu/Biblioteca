@@ -202,7 +202,7 @@ export const BookView = () => {
                 <section className="mt-6">
                     <h2 className="text-2xl font-semibold mb-4">Autor</h2>
                     <p className="text-gray-800 leading-relaxed">
-                    {(book as any).authorBio ||
+                    {book?.authorBio ||
                         `Información del autor ${book?.author} próximamente.`}
                     </p>
                 </section>

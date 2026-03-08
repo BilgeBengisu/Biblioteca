@@ -2,15 +2,15 @@
 import { supabase } from "../supabase-client";
 import { apolloClient } from "../contexts/ApolloClient";
 import { SEARCH_BOOKS } from "../queries/queries";
-import type { BookResult, SearchBooksVariables, SearchResponse, UserResult } from "../types/Search";
+import type { BookResult, HardcoverBookDocument, SearchBooksVariables, SearchResponse, UserResult } from "../types/Search";
 
-export async function searchBooks(query: string, signal?: AbortSignal): Promise<BookResult[]> {
+export async function searchBooks(query: string, signal?: AbortSignal, perPage = 20): Promise<BookResult[]> {
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   if (!query.trim()) return [];
 
-  const response = await apolloClient.query<SearchResponse, SearchBooksVariables>({
+  const response = await apolloClient.query<SearchResponse<HardcoverBookDocument>, SearchBooksVariables>({
     query: SEARCH_BOOKS,
-    variables: { query: query.trim(), perPage: 20, page: 1 },
+    variables: { query: query.trim(), perPage, page: 1 },
     fetchPolicy: "no-cache",
   });
 
@@ -18,10 +18,10 @@ export async function searchBooks(query: string, signal?: AbortSignal): Promise<
 
   const hits =
     response?.data?.search?.results?.hits
-      ?.map((hit: any) => hit.document)
-      .filter(Boolean) ?? [];
+      ?.map((hit) => hit?.document)
+      .filter((doc): doc is HardcoverBookDocument => doc != null) ?? [];
 
-  return hits.map((book: any) => ({
+  return hits.map((book) => ({
     id: Number(book.id),
     title: book.title,
     author: book.contributions?.[0]?.author?.name ?? null,

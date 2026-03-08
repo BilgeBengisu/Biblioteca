@@ -1,5 +1,17 @@
 export type SearchType= "books" | "users";
 
+// Shape of a single book document returned by the Hardcover search API
+export type HardcoverBookDocument = {
+  id: string;
+  title: string;
+  slug?: string | null;
+  rating?: number | null;
+  image?: { url?: string | null; color?: string | null } | null;
+  contributions?: Array<{
+    author?: { name?: string | null; bio?: string | null } | null;
+  } | null> | null;
+};
+
 export type SearchBooksVariables = {
   query: string;
   perPage?: number;

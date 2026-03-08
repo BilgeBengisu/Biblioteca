@@ -211,7 +211,7 @@ export const Profile = () => {
                         onClick={() => setIsEditing(true)}
                         className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                     >
-                        Editar perfil
+                        Editar Perfil
                     </button>
                     ) : null}
                 </div>

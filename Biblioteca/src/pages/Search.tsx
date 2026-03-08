@@ -9,6 +9,12 @@ function parseScope(value: string | null): SearchType {
   return value === "users" ? "users" : "books";
 }
 
+/**
+ * Controls UI for searching books and users
+ * useSearch hook handles debounced search logic and state management, 
+ * while this component manages URL params and renders controls/results
+ */
+
 export const Search = () => {
   const [params, setParams] = useSearchParams();
 
