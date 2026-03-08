@@ -1,9 +1,9 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
-import type { ProfileRow, UserBookRow } from "../types/Profile";
+import type { UserBookRow } from "../types/Profile";
 import type { Post } from "../types/Post";
 import { useState, useEffect } from "react";
-import { getProfileById, getProfileByUsername, getUserBooksByUserId, updateProfileById } from "../services/profiles";
+import { getUserBooksByUserId, updateProfileById } from "../services/profiles";
 import { getPosts } from "../services/posts";
 import { EditProfileForm } from "../components/EditProfileForm";
 import { ProfileTabView } from "../components/ProfileTabView";
@@ -11,18 +11,21 @@ import { useParams } from "react-router-dom";
 import { FollowButton } from "../components/FollowButton";
 import { FollowCounts } from "../components/FollowCounts";
 import { useToggleLike } from "../hooks/useToggleLike";
+import { useProfile } from "../hooks/useProfile";
 
 
 export const Profile = () => {
     const { user, refreshProfile } = useAuth();
     const { username } = useParams<{ username?: string }>();
 
-    const [profile, setProfile] = useState<ProfileRow | null>(null);
-    // checking if the user is viewing their own profile
-    const isOwnProfile = !username ? !!user : profile?.id === user?.id;
-    const [isLoading, setIsLoading] = useState(false);
+    /**
+     * profile: the profile data of the user being viewed (could be the logged in user or another user)
+     * isLoading: true if the profile data is being loaded, false otherwise
+     * error: error message if there was an error loading the profile, null otherwise
+     * isOwnProfile: true if the profile being viewed belongs to the logged in user, false otherwise
+     */
+    const { profile, setProfile, isLoading, profileError, isOwnProfile } = useProfile(username);
     const [isEditing, setIsEditing] = useState(false);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [followRefreshKey, setFollowRefreshKey] = useState(0); // to refresh the follower count
     const [activeTab, setActiveTab] = useState<"library" | "posts">("library");
     const [libraryLoading, setLibraryLoading] = useState(false);
@@ -46,32 +49,6 @@ export const Profile = () => {
     useEffect(() => {
         setFollowRefreshKey(0);
     }, [profile?.id]);
-
-    // setting profile
-    useEffect(() => {
-        // nothing to fetch
-        if (!user && !username) return;
-        
-        setIsLoading(true);
-        setErrorMsg(null);
-
-        (async () => {
-        try {
-            const data = username
-            ? await getProfileByUsername(username)
-            : await getProfileById(user!.id)
-
-            setProfile(data);
-        } catch (err) {
-            const message =
-            err instanceof Error ? err.message : "Error al cargar el perfil.";
-            setErrorMsg(message);
-            setProfile(null);
-        } finally {
-            setIsLoading(false);
-        }
-        })();
-    }, [username, user]);
 
     // useEffect to load library tab on mounting (the library tab is default)
     useEffect(() => {
@@ -169,11 +146,11 @@ export const Profile = () => {
     }
 
     // Error
-    if (errorMsg) {
+    if (profileError) {
         return (
             <div className="max-w-3xl mx-auto p-6">
                 <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-red-200 dark:border-red-900 p-6">
-                    <p className="text-sm text-red-600">{errorMsg}</p>
+                    <p className="text-sm text-red-600">{profileError}</p>
                 </div>
             </div>
         );

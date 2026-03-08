@@ -38,7 +38,7 @@ export async function searchUsers(query: string, signal?: AbortSignal): Promise<
   const { data, error } = await supabase
     .from("profiles")
     .select("id, username, avatar_url")
-    .ilike("username", `${query}%`)
+    .ilike("username", `${query.trim()}%`)
     .limit(20);
 
   if (error) throw error;
