@@ -1,6 +1,6 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { updateProfileById } from "../services/profiles";
 import { EditProfileForm } from "../components/EditProfileForm";
 import { ProfileTabView } from "../components/ProfileTabView";
@@ -11,7 +11,7 @@ import { useToggleLike } from "../hooks/useToggleLike";
 import { useProfile } from "../hooks/useProfile";
 import { usePosts } from "../hooks/usePosts";
 import { useLibrary } from "../hooks/useLibrary";
-
+import { ReadingGoalWidget } from "../components/ReadingGoalWidget";
 
 export const Profile = () => {
     const { user, refreshProfile } = useAuth();
@@ -159,12 +159,12 @@ export const Profile = () => {
                         </p>
                         )}
 
-                        <div className="text-sm text-neutral-600">
-                        Meta de Lectura:{" "}
-                        <span className="font-medium">
-                            {profile.reading_goal ?? "Establecer Meta de Lectura"}
-                        </span>
-                        </div>
+                        <ReadingGoalWidget
+                            goal={profile.reading_goal}
+                            progress={library ? library.finished.length : 0}
+                            isOwnProfile={isOwnProfile}
+                            onEditClick={() => setIsEditing(true)}
+                        />
                     </>
                 )}
             </div>

@@ -1,5 +1,25 @@
 const HARDCOVER_API_URL = "https://api.hardcover.app/v1/graphql";
 
+/**
+ * Vercel Serverless Function — Hardcover API Proxy
+ *
+ * Purpose:
+ *   Acts as a secure proxy between the frontend and the Hardcover GraphQL API.
+ *   The frontend (Apollo Client) sends all GraphQL requests to /api/hardcover
+ *   instead of directly to Hardcover. This function forwards those requests and
+ *   injects the bearer token server-side, so the token is never exposed in the
+ *   client bundle or browser.
+ *
+ * How it works:
+ *   1. Receives a POST request from Apollo Client containing a GraphQL query/mutation.
+ *   2. Reads HARDCOVER_API_BEARER from the server environment (Vercel env vars).
+ *   3. Forwards the request body to the Hardcover API with the Authorization header attached.
+ *   4. Streams the response (status + body) back to the client as-is.
+ *
+ * Used by:
+ *   - src/contexts/ApolloClient.tsx — Apollo Client's HttpLink points to "/api/hardcover"
+**/
+
 function setCorsHeaders(req, res) {
   const origin = req.headers.origin || "*";
   res.setHeader("Access-Control-Allow-Origin", origin);
