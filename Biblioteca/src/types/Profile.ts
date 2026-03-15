@@ -25,4 +25,13 @@ export type UserBookRow = {
   book_data: any | null; // we can type this later
 };
 
+export type ReadingGoalRow = {
+  id: number;
+  user_id: string;
+  year: number;
+  target: number;
+  created_at: string;
+  updated_at: string | null;
+};
+
 export type ProfileTab = "library" | "posts";

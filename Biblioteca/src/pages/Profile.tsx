@@ -12,6 +12,7 @@ import { useProfile } from "../hooks/useProfile";
 import { usePosts } from "../hooks/usePosts";
 import { useLibrary } from "../hooks/useLibrary";
 import { ReadingGoalWidget } from "../components/ReadingGoalWidget";
+import { useReadingGoal } from "../hooks/useReadingGoal";
 
 export const Profile = () => {
     const { user, refreshProfile } = useAuth();
@@ -23,7 +24,8 @@ export const Profile = () => {
      * error: error message if there was an error loading the profile, null otherwise
      * isOwnProfile: true if the profile being viewed belongs to the logged in user, false otherwise
      */
-    const { profile, setProfile, isLoading, profileError, isOwnProfile } = useProfile(username);
+    const { profile, setProfile, loading, profileError, isOwnProfile } = useProfile(username);
+    const { goal, progress, goalLoading, goalError } = useReadingGoal(profile?.id, new Date().getFullYear());
     const [isEditing, setIsEditing] = useState(false);
     const [followRefreshKey, setFollowRefreshKey] = useState(0); // to refresh the follower count
     const [activeTab, setActiveTab] = useState<"library" | "posts">("library");
@@ -57,7 +59,7 @@ export const Profile = () => {
     }
 
     // Loading
-    if (isLoading) {
+    if (loading || goalLoading) {
         return (
             <div className="max-w-3xl mx-auto p-6">
                 <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
@@ -68,11 +70,11 @@ export const Profile = () => {
     }
 
     // Error (network/server failure)
-    if (profileError) {
+    if (profileError || goalError) {
         return (
             <div className="max-w-3xl mx-auto p-6">
                 <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-red-200 dark:border-red-900 p-6">
-                    <p className="text-sm text-red-600">{profileError}</p>
+                    <p className="text-sm text-red-600">{profileError || goalError}</p>
                 </div>
             </div>
         );
@@ -160,8 +162,8 @@ export const Profile = () => {
                         )}
 
                         <ReadingGoalWidget
-                            goal={profile.reading_goal}
-                            progress={library ? library.finished.length : 0}
+                            goal={goal?.target ?? null}
+                            progress={progress}
                             isOwnProfile={isOwnProfile}
                             onEditClick={() => setIsEditing(true)}
                         />

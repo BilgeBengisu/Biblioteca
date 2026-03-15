@@ -6,14 +6,14 @@ import type { ProfileRow } from "../types/Profile";
 export function useProfile(username?: string) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ProfileRow | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user && !username) return;
 
     let alive = true;
-    setIsLoading(true);
+    setLoading(true);
     setProfileError(null);
 
     (async () => {
@@ -25,7 +25,7 @@ export function useProfile(username?: string) {
       } catch (err) {
         if (alive) setProfileError(err instanceof Error ? err.message : "Error al cargar el perfil.");
       } finally {
-        if (alive) setIsLoading(false);
+        if (alive) setLoading(false);
       }
     })();
 
@@ -34,5 +34,5 @@ export function useProfile(username?: string) {
 
   const isOwnProfile = profile != null && user != null && profile.id === user.id;
 
-  return { profile, setProfile, isLoading, profileError, isOwnProfile };
+  return { profile, setProfile, loading, profileError, isOwnProfile };
 }

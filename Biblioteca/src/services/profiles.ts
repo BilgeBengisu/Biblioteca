@@ -2,7 +2,7 @@
 // update profile service: updateProfileById
 
 import { supabase } from "../supabase-client";
-import type { ProfileRow, UserBookRow } from "../types/Profile";
+import type { ProfileRow, UserBookRow, ReadingGoalRow} from "../types/Profile";
 
 export async function getProfileById(userId: string): Promise<ProfileRow | null> {
   const { data, error } = await supabase
@@ -30,6 +30,35 @@ export async function getProfileByUsername(username: string): Promise<ProfileRow
 
   if (error) throw new Error(error.message);
   return data as ProfileRow;
+}
+
+// get reading goal for a specific year
+export async function getReadingGoal(userId: string, year: number): Promise<ReadingGoalRow | null> {
+  const { data, error } = await supabase
+    .from("reading_goals")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("year", year)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data as ReadingGoalRow;
+}
+
+// create or update reading goal for a year
+export async function upsertReadingGoal(
+  userId: string,
+  year: number,
+  target: number
+): Promise<ReadingGoalRow> {
+  const { data, error } = await supabase
+    .from("reading_goals")
+    .upsert({ user_id: userId, year, target }, { onConflict: "user_id,year" })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data as ReadingGoalRow;
 }
 
 export async function isUsernameAvailable(username: string): Promise<boolean> {
@@ -100,6 +129,22 @@ export async function uploadAvatar(
   const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
 
   return {fullUrl: data.publicUrl, path: filePath}; // only path to store in the database
+}
+
+export async function getFinishedBooksCount(userId: string, year: number): Promise<number> {
+  const start = `${year}-01-01`;
+  const end = `${year + 1}-01-01`;
+
+  const { count, error } = await supabase
+    .from("user_books")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "finished")
+    .gte("finished_at", start)
+    .lt("finished_at", end);
+
+  if (error) throw new Error(error.message);
+  return count ?? 0;
 }
 
 export async function getUserBooksByUserId(userId: string): Promise<UserBookRow[]> {

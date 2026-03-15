@@ -96,7 +96,18 @@ export async function upsertUserBook(params: {
   };
 
   // fields that are conditionally updated and shouldn't overwrite existing data otherwise
-  if (params.status !== undefined) payload.status = params.status;
+  if (params.status !== undefined) {
+    payload.status = params.status;
+    if (params.status === "reading") {
+      payload.started_at = new Date().toISOString();
+      payload.finished_at = null;
+    } else if (params.status === "finished") {
+      payload.finished_at = new Date().toISOString();
+    } else if (params.status === "want_to_read") {
+      payload.started_at = null;
+      payload.finished_at = null;
+    }
+  }
   if (params.rating !== undefined) payload.rating = params.rating;
 
   const { data, error } = await supabase
