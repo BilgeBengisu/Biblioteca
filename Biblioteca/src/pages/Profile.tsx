@@ -4,7 +4,7 @@ import { useState } from "react";
 import { updateProfileById } from "../services/profiles";
 import { EditProfileForm } from "../components/EditProfileForm";
 import { ProfileTabView } from "../components/ProfileTabView";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { FollowButton } from "../components/FollowButton";
 import { FollowCounts } from "../components/FollowCounts";
 import { useToggleLike } from "../hooks/useToggleLike";
@@ -25,6 +25,12 @@ export const Profile = () => {
      * isOwnProfile: true if the profile being viewed belongs to the logged in user, false otherwise
      */
     const { profile, setProfile, loading, profileError, isOwnProfile } = useProfile(username);
+    /**
+     * goal: the target number of books to read for the current year, null if no goal is set
+     * progress: the number of books finished so far this year
+     * goalLoading: true if the reading goal data is being loaded, false otherwise
+     * goalError: error message if there was an error loading the reading goal, null otherwise
+     */
     const { goal, progress, goalLoading, goalError } = useReadingGoal(profile?.id, new Date().getFullYear());
     const [isEditing, setIsEditing] = useState(false);
     const [followRefreshKey, setFollowRefreshKey] = useState(0); // to refresh the follower count
@@ -118,14 +124,14 @@ export const Profile = () => {
                         onChanged={() => setFollowRefreshKey((k) => k + 1)}
                     />
                     )}
-                    {isOwnProfile && !isEditing ? (
-                    <button
-                        onClick={() => setIsEditing(true)}
+                    {isOwnProfile && (
+                    <Link
+                        to="/edit-profile"
                         className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                     >
                         Editar Perfil
-                    </button>
-                    ) : null}
+                    </Link>
+                    )}
                 </div>
                 {isEditing && profile && (
                     <EditProfileForm

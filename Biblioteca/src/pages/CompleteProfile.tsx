@@ -86,7 +86,10 @@ export const CompleteProfile = () => {
           }
 
           try {
-            await updateProfileById(user.id, { username: trimmed });
+            await updateProfileById(user.id, {
+              username: trimmed,
+              avatar_url: user.user_metadata?.avatar_url ?? null,
+            });
             await refreshProfile();
             navigate("/profile", { replace: true });
           } catch (err) {

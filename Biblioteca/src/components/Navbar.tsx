@@ -35,11 +35,7 @@ export const Navbar = () => {
                             <li>
                                 <Link to="/profile" className="profile-link">
                                     <img
-                                        src={
-                                            profile?.avatar_url ??
-                                            (user?.user_metadata?.avatar_url as string | undefined) ??
-                                            default_avatar
-                                        }
+                                        src={profile?.avatar_url || default_avatar}
                                         alt="Profile"
                                         className="navbar-avatar"
                                     />

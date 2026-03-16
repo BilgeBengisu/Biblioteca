@@ -12,6 +12,7 @@ import { AuthCallback } from "./pages/AuthCallBack";
 import { Search } from "./pages/Search";
 import { ConfirmEmail } from "./pages/ConfirmEmail";
 import { CompleteProfile } from "./pages/CompleteProfile";
+import { EditProfile } from "./pages/EditProfile";
 import { useAuth } from "./contexts/AuthContext";
 import { isUsernameMissing } from "./utils/profile";
 
@@ -49,6 +50,7 @@ function App() {
           <Route path="/complete-profile" element={<CompleteProfile />} />
           <Route path="/profile/:username" element={<Profile />} /> 
           <Route path="/search" element={<Search />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="*" element={<h1>404 Not Found</h1>} />
         </Routes>
       </div>

@@ -78,20 +78,17 @@ export async function updateProfileById(
   updates: {
     username?: ProfileRow["username"];
     bio?: ProfileRow["bio"];
-    reading_goal?: ProfileRow["reading_goal"];
     avatar_url?: ProfileRow["avatar_url"];
   }
 ): Promise<ProfileRow> {
   const updatePayload: {
     username?: ProfileRow["username"];
     bio?: ProfileRow["bio"];
-    reading_goal?: ProfileRow["reading_goal"];
     avatar_url?: ProfileRow["avatar_url"];
   } = {};
 
   if (updates.username !== undefined) updatePayload.username = updates.username;
   if (updates.bio !== undefined) updatePayload.bio = updates.bio;
-  if (updates.reading_goal !== undefined) updatePayload.reading_goal = updates.reading_goal;
 
   if (updates.avatar_url !== undefined) { // avatar is optional
     updatePayload.avatar_url = updates.avatar_url;
@@ -101,7 +98,7 @@ export async function updateProfileById(
     .from("profiles")
     .update(updatePayload)
     .eq("id", userId)
-    .select("id, username, bio, avatar_url, reading_goal, created_at, updated_at")
+    .select("id, username, bio, avatar_url, created_at, updated_at")
     .single();
 
   if (error) throw new Error(error.message);

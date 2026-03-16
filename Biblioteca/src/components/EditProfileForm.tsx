@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ProfileRow } from "../types/Profile";
 import { uploadAvatar } from "../services/storage";
+import defaultAvatar from "../assets/default-avatar.svg";
 
 type EditProfileFormProps = {
   profile: ProfileRow;
@@ -14,7 +15,6 @@ type EditProfileFormProps = {
     updates: {
       username?: string | null;
       bio: string | null;
-      reading_goal: number | null;
       avatar_url?: string | null;
     }
   ) => Promise<ProfileRow>;
@@ -31,11 +31,17 @@ export const EditProfileForm = ({
 }: EditProfileFormProps) => {
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
-  const [readingGoal, setReadingGoal] = useState<string>("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingRemoveAvatar, setPendingRemoveAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!avatarFile) { setPreviewUrl(null); return; }
+    const url = URL.createObjectURL(avatarFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatarFile]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -43,21 +49,19 @@ export const EditProfileForm = ({
 
   const normalizedUsername = username.trim();
   const normalizedBio = bio.trim();
-  const normalizedReadingGoal = readingGoal.trim();
   const profileUsername = (profile.username ?? "").trim();
   const profileBio = (profile.bio ?? "").trim();
-  const profileReadingGoal = profile.reading_goal != null ? String(profile.reading_goal) : "";
 
   const hasChanges =
     normalizedUsername !== profileUsername ||
     normalizedBio !== profileBio ||
-    normalizedReadingGoal !== profileReadingGoal;
+    avatarFile !== null ||
+    pendingRemoveAvatar;
 
   // Prefill when component mounts / profile changes
   useEffect(() => {
     setUsername(profile.username ?? "");
     setBio(profile.bio ?? "");
-    setReadingGoal(profile.reading_goal != null ? String(profile.reading_goal) : "");
     setErrorMsg(null);
     setFieldErrors({});
   }, [profile]);
@@ -73,76 +77,6 @@ export const EditProfileForm = ({
     return { general: message };
   };
 
-  // Handle avatar upload
-  const handleAvatarUpload = async () => {
-    if (!avatarFile) return;
-    if (!["image/jpeg", "image/png"].includes(avatarFile.type)) {
-      setErrorMsg("Solo se permiten imágenes JPG o PNG.");
-      setAvatarFile(null);
-      return;
-    }
-
-    setIsUploadingAvatar(true);
-    setErrorMsg(null);
-    setFieldErrors({});
-
-    try {
-        const trimmedUsername = username.trim();
-        const usernameUpdate = trimmedUsername.length ? trimmedUsername : undefined;
-        const { publicUrl } = await uploadAvatar(avatarBucket, userId, avatarFile);
-
-        const updated = await updateProfile(userId, {
-            username: usernameUpdate,
-            bio: bio.trim() || null,
-            reading_goal: readingGoal.trim() ? Number(readingGoal) : null,
-            avatar_url: publicUrl,
-        });
-
-        onSaved(updated);
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : "Error al subir el avatar.";
-        const mapped = mapProfileError(msg);
-        if (mapped.fieldErrors) {
-          setFieldErrors(mapped.fieldErrors);
-        } else {
-          setErrorMsg(mapped.general ?? msg);
-        }
-    } finally {
-        setIsUploadingAvatar(false);
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
-    if (!currentAvatarUrl) return;
-
-    setIsRemovingAvatar(true);
-    setErrorMsg(null);
-    setFieldErrors({});
-
-    try {
-      const trimmedUsername = username.trim();
-      const usernameUpdate = trimmedUsername.length ? trimmedUsername : undefined;
-      const updated = await updateProfile(userId, {
-        username: usernameUpdate,
-        bio: bio.trim().length ? bio.trim() : null,
-        reading_goal: readingGoal.trim().length ? Number(readingGoal) : null,
-        avatar_url: null,
-      });
-
-      setAvatarFile(null);
-      onSaved(updated);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Error al eliminar la foto de perfil.";
-      const mapped = mapProfileError(msg);
-      if (mapped.fieldErrors) {
-        setFieldErrors(mapped.fieldErrors);
-      } else {
-        setErrorMsg(mapped.general ?? msg);
-      }
-    } finally {
-      setIsRemovingAvatar(false);
-    }
-  };
 
   // error messages for invalid inputs
   const validate = () => {
@@ -153,12 +87,6 @@ export const EditProfileForm = ({
       if (!/^[a-zA-Z0-9_]+$/.test(u)) return "El nombre de usuario solo puede contener letras, números y guiones bajos.";
     }
     if (bio.length > 500) return "La biografía debe tener 500 caracteres o menos.";
-    if (readingGoal.trim().length > 0) {
-      const n = Number(readingGoal);
-      if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
-        return "El objetivo de lectura debe ser un número entero (0 o más).";
-      }
-    }
     return null;
   };
 
@@ -176,10 +104,19 @@ export const EditProfileForm = ({
     try {
       const trimmedUsername = username.trim();
       const usernameUpdate = trimmedUsername.length ? trimmedUsername : undefined;
+
+      let avatarUpdate: { avatar_url: string | null } | undefined;
+      if (avatarFile) {
+        const { publicUrl } = await uploadAvatar(avatarBucket, userId, avatarFile);
+        avatarUpdate = { avatar_url: publicUrl };
+      } else if (pendingRemoveAvatar) {
+        avatarUpdate = { avatar_url: null };
+      }
+
       const updated = await updateProfile(userId, {
         username: usernameUpdate,
         bio: bio.trim().length ? bio.trim() : null,
-        reading_goal: readingGoal.trim().length ? Number(readingGoal) : null,
+        ...avatarUpdate,
       });
 
       onSaved(updated);
@@ -207,6 +144,13 @@ export const EditProfileForm = ({
         <label className="text-sm text-neutral-700 dark:text-neutral-200">Foto de Perfil</label>
 
         <div className="flex items-center gap-3">
+            <div className="ring-1 ring-neutral-200 dark:ring-neutral-800 flex-shrink-0 rounded-full">
+              <img
+                src={pendingRemoveAvatar ? defaultAvatar : (previewUrl ?? currentAvatarUrl ?? defaultAvatar)}
+                alt="Avatar actual"
+                className="w-16 h-16 rounded-full object-cover"
+              />
+            </div>
 
             <div className="flex-1 space-y-2">
                 <input
@@ -223,6 +167,7 @@ export const EditProfileForm = ({
                     }
                     setErrorMsg(null);
                     setAvatarFile(file);
+                    setPendingRemoveAvatar(false);
                   }}
                   className="sr-only"
                 />
@@ -240,26 +185,16 @@ export const EditProfileForm = ({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {(currentAvatarUrl || avatarFile) && !pendingRemoveAvatar && (
                   <button
                     type="button"
-                    onClick={handleAvatarUpload}
-                    disabled={!avatarFile || isUploadingAvatar || isSaving || isRemovingAvatar}
-                    className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50"
+                    onClick={() => { setPendingRemoveAvatar(true); setAvatarFile(null); }}
+                    disabled={isSaving}
+                    className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 text-red-600 hover:bg-red-50 dark:hover:bg-neutral-800 disabled:opacity-50"
                   >
-                    {isUploadingAvatar ? "Subiendo…" : "Subir avatar"}
+                    Eliminar foto
                   </button>
-                  {currentAvatarUrl && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveAvatar}
-                      disabled={isUploadingAvatar || isSaving || isRemovingAvatar}
-                      className="text-sm px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 text-red-600 hover:bg-red-50 dark:hover:bg-neutral-800 disabled:opacity-50"
-                    >
-                      {isRemovingAvatar ? "Eliminando…" : "Eliminar foto"}
-                    </button>
-                  )}
-                </div>
+                )}
             </div>
         </div>
       </div>
@@ -295,18 +230,6 @@ export const EditProfileForm = ({
           className="w-full min-h-[96px] rounded-lg border border-neutral-200 dark:border-neutral-800 bg-transparent px-3 py-2 text-sm"
         />
         <p className="text-xs text-neutral-500">{bio.length}/500</p>
-      </div>
-
-      <div className="space-y-1">
-        <label className="text-sm text-neutral-700 dark:text-neutral-200">Meta de Lectura</label>
-        <input
-          value={readingGoal}
-          onChange={(e) => setReadingGoal(e.target.value)}
-          inputMode="numeric"
-          placeholder="e.g. 20"
-          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-800 bg-transparent px-3 py-2 text-sm"
-        />
-        <p className="text-xs text-neutral-500">Numero de Libros</p>
       </div>
 
       <div className="flex items-center gap-2 pt-1">
