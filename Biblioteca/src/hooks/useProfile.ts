@@ -34,5 +34,5 @@ export function useProfile(username?: string) {
 
   const isOwnProfile = profile != null && user != null && profile.id === user.id;
 
-  return { profile, setProfile, loading, profileError, isOwnProfile };
+  return { profile, loading, profileError, isOwnProfile };
 }

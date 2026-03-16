@@ -1,7 +1,6 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
 import { useState } from "react";
-import { upsertReadingGoal } from "../services/profiles";
 import { ProfileTabView } from "../components/ProfileTabView";
 import { Link, useParams } from "react-router-dom";
 import { FollowButton } from "../components/FollowButton";
@@ -14,7 +13,7 @@ import { ReadingGoalWidget } from "../components/ReadingGoalWidget";
 import { useReadingGoal } from "../hooks/useReadingGoal";
 
 export const Profile = () => {
-    const { user, refreshProfile } = useAuth();
+    const { user } = useAuth();
     const { username } = useParams<{ username?: string }>();
 
     /**
@@ -23,7 +22,7 @@ export const Profile = () => {
      * error: error message if there was an error loading the profile, null otherwise
      * isOwnProfile: true if the profile being viewed belongs to the logged in user, false otherwise
      */
-    const { profile, setProfile, loading, profileError, isOwnProfile } = useProfile(username);
+    const { profile, loading, profileError, isOwnProfile } = useProfile(username);
     /**
      * goal: the target number of books to read for the current year, null if no goal is set
      * progress: the number of books finished so far this year
@@ -31,28 +30,11 @@ export const Profile = () => {
      * goalError: error message if there was an error loading the reading goal, null otherwise
      */
     const currentYear = new Date().getFullYear();
-    const { goal, setGoal, progress, goalLoading, goalError } = useReadingGoal(profile?.id, currentYear);
-    const [isEditing, setIsEditing] = useState(false);
-    const [goalInput, setGoalInput] = useState("");
-    const [goalSaving, setGoalSaving] = useState(false);
-    const [goalSaveError, setGoalSaveError] = useState<string | null>(null);
-
-    async function handleSaveGoal() {
-        if (!profile?.id) return;
-        const target = parseInt(goalInput, 10);
-        if (!target || target < 1) return;
-        setGoalSaving(true);
-        setGoalSaveError(null);
-        try {
-            const updated = await upsertReadingGoal(profile.id, currentYear, target);
-            setGoal(updated);
-            setIsEditing(false);
-        } catch (err) {
-            setGoalSaveError(err instanceof Error ? err.message : "Error al guardar la meta.");
-        } finally {
-            setGoalSaving(false);
-        }
-    }
+    const {
+        goal, progress, goalLoading, goalError,
+        isEditing, goalInput, goalSaving, goalSaveError,
+        onEditClick, onGoalInputChange, onSave, onCancel,
+    } = useReadingGoal(profile?.id, currentYear);
     const [followRefreshKey, setFollowRefreshKey] = useState(0); // to refresh the follower count
     const [activeTab, setActiveTab] = useState<"library" | "posts">("library");
     /**
@@ -178,10 +160,10 @@ export const Profile = () => {
                         goalInput={goalInput}
                         goalSaving={goalSaving}
                         goalSaveError={goalSaveError}
-                        onEditClick={() => setIsEditing(true)}
-                        onGoalInputChange={setGoalInput}
-                        onSave={handleSaveGoal}
-                        onCancel={() => { setIsEditing(false); setGoalInput(""); }}
+                        onEditClick={onEditClick}
+                        onGoalInputChange={onGoalInputChange}
+                        onSave={onSave}
+                        onCancel={onCancel}
                     />
                 </>
             </div>

@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import type { ReadingGoalRow } from "../types/Profile";
-import { getReadingGoal, getFinishedBooksCount } from "../services/profiles";
+import { getReadingGoal, getFinishedBooksCount, upsertReadingGoal } from "../services/profiles";
 
 export function useReadingGoal(userId?: string, year?: number) {
     const [goal, setGoal] = useState<ReadingGoalRow | null>(null);
     const [progress, setProgress] = useState<number>(0);
     const [goalLoading, setGoalLoading] = useState(false);
     const [goalError, setGoalError] = useState<string | null>(null);
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [goalInput, setGoalInput] = useState("");
+    const [goalSaving, setGoalSaving] = useState(false);
+    const [goalSaveError, setGoalSaveError] = useState<string | null>(null);
+
     useEffect(() => {
         if (!userId || !year) return;
 
@@ -36,5 +42,40 @@ export function useReadingGoal(userId?: string, year?: number) {
         return () => { alive = false; };
     }, [userId, year]);
 
-    return { goal, setGoal, progress, goalLoading, goalError };
+    async function saveGoal() {
+        if (!userId || !year) return;
+        const target = parseInt(goalInput, 10);
+        if (!target || target < 1) return;
+        setGoalSaving(true);
+        setGoalSaveError(null);
+        try {
+            const updated = await upsertReadingGoal(userId, year, target);
+            setGoal(updated);
+            setIsEditing(false);
+        } catch (err) {
+            setGoalSaveError(err instanceof Error ? err.message : "Error al guardar la meta.");
+        } finally {
+            setGoalSaving(false);
+        }
+    }
+
+    function cancelEditing() {
+        setIsEditing(false);
+        setGoalInput("");
+    }
+
+    return {
+        goal,
+        progress,
+        goalLoading,
+        goalError,
+        isEditing,
+        goalInput,
+        goalSaving,
+        goalSaveError,
+        onEditClick: () => setIsEditing(true),
+        onGoalInputChange: setGoalInput,
+        onSave: saveGoal,
+        onCancel: cancelEditing,
+    };
 }
