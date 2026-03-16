@@ -36,5 +36,5 @@ export function useReadingGoal(userId?: string, year?: number) {
         return () => { alive = false; };
     }, [userId, year]);
 
-    return { goal, progress, goalLoading, goalError };
+    return { goal, setGoal, progress, goalLoading, goalError };
 }

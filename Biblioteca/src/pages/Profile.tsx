@@ -1,8 +1,7 @@
 import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
 import { useState } from "react";
-import { updateProfileById } from "../services/profiles";
-import { EditProfileForm } from "../components/EditProfileForm";
+import { upsertReadingGoal } from "../services/profiles";
 import { ProfileTabView } from "../components/ProfileTabView";
 import { Link, useParams } from "react-router-dom";
 import { FollowButton } from "../components/FollowButton";
@@ -31,8 +30,29 @@ export const Profile = () => {
      * goalLoading: true if the reading goal data is being loaded, false otherwise
      * goalError: error message if there was an error loading the reading goal, null otherwise
      */
-    const { goal, progress, goalLoading, goalError } = useReadingGoal(profile?.id, new Date().getFullYear());
+    const currentYear = new Date().getFullYear();
+    const { goal, setGoal, progress, goalLoading, goalError } = useReadingGoal(profile?.id, currentYear);
     const [isEditing, setIsEditing] = useState(false);
+    const [goalInput, setGoalInput] = useState("");
+    const [goalSaving, setGoalSaving] = useState(false);
+    const [goalSaveError, setGoalSaveError] = useState<string | null>(null);
+
+    async function handleSaveGoal() {
+        if (!profile?.id) return;
+        const target = parseInt(goalInput, 10);
+        if (!target || target < 1) return;
+        setGoalSaving(true);
+        setGoalSaveError(null);
+        try {
+            const updated = await upsertReadingGoal(profile.id, currentYear, target);
+            setGoal(updated);
+            setIsEditing(false);
+        } catch (err) {
+            setGoalSaveError(err instanceof Error ? err.message : "Error al guardar la meta.");
+        } finally {
+            setGoalSaving(false);
+        }
+    }
     const [followRefreshKey, setFollowRefreshKey] = useState(0); // to refresh the follower count
     const [activeTab, setActiveTab] = useState<"library" | "posts">("library");
     /**
@@ -133,48 +153,37 @@ export const Profile = () => {
                     </Link>
                     )}
                 </div>
-                {isEditing && profile && (
-                    <EditProfileForm
-                        profile={profile}
-                        userId={user.id}
-                        avatarBucket="avatars"
-                        currentAvatarUrl={profile.avatar_url}
-                        updateProfile={updateProfileById} // make a call to Supabase to update profile here - keeps the EditProfileForm decoupled from Supabase call
-                        onCancel={() => setIsEditing(false)}
-                        onSaved={(updated) => {
-                        setProfile(updated);
-                        void refreshProfile();
-                        setIsEditing(false);
-                        }}
+                <>
+                    {isOwnProfile && ( // can't view email unless on your own profile
+                    <p className="text-sm text-neutral-600 truncate">{user.email}</p>
+                    )}
+                    {profile.id && 
+                    <FollowCounts 
+                        profileId={profile.id} 
+                        refreshKey={followRefreshKey} 
+                        className="mt-1" 
+                    />}
+
+                    {profile.bio && (
+                    <p className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-pre-line">
+                        {profile.bio}
+                    </p>
+                    )}
+
+                    <ReadingGoalWidget
+                        goal={goal?.target ?? null}
+                        progress={progress}
+                        isOwnProfile={isOwnProfile}
+                        isEditing={isEditing}
+                        goalInput={goalInput}
+                        goalSaving={goalSaving}
+                        goalSaveError={goalSaveError}
+                        onEditClick={() => setIsEditing(true)}
+                        onGoalInputChange={setGoalInput}
+                        onSave={handleSaveGoal}
+                        onCancel={() => { setIsEditing(false); setGoalInput(""); }}
                     />
-                )}
-                
-                {!isEditing && (
-                    <>
-                        {isOwnProfile && ( // can't view email unless on your own profile
-                        <p className="text-sm text-neutral-600 truncate">{user.email}</p>
-                        )}
-                        {profile.id && 
-                        <FollowCounts 
-                            profileId={profile.id} 
-                            refreshKey={followRefreshKey} 
-                            className="mt-1" 
-                        />}
-
-                        {profile.bio && (
-                        <p className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-pre-line">
-                            {profile.bio}
-                        </p>
-                        )}
-
-                        <ReadingGoalWidget
-                            goal={goal?.target ?? null}
-                            progress={progress}
-                            isOwnProfile={isOwnProfile}
-                            onEditClick={() => setIsEditing(true)}
-                        />
-                    </>
-                )}
+                </>
             </div>
         </div>
 
