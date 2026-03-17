@@ -93,7 +93,6 @@ export async function getPosts(
 
   if (posts.length === 0) return posts;
 
-  // Keep your existing like enrichment logic as-is.
   // (Optional improvement below: pass viewerId to avoid calling auth.getUser.)
   const {
     data: { user },
