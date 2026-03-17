@@ -23,20 +23,20 @@ export const StarRating: React.FC<StarRatingProps> = ({
   const stars = (
     <>
       {Array.from({ length: fullStars }).map((_, i) => (
-        <span key={`full-${i}`} className="text-yellow-500">
+        <span key={`full-${i}`} className="text-yellow-400">
           ★
         </span>
       ))}
       {hasHalfStar && (
-        <span className="relative inline-block text-neutral-300">
+        <span className="relative inline-block text-neutral-300 dark:text-neutral-600">
           ★
-          <span className="absolute left-0 top-0 w-1/2 overflow-hidden text-yellow-500">
+          <span className="absolute left-0 top-0 w-1/2 overflow-hidden text-yellow-400">
             ★
           </span>
         </span>
       )}
       {Array.from({ length: emptyStars }).map((_, i) => (
-        <span key={`empty-${i}`} className="text-neutral-300">
+        <span key={`empty-${i}`} className="text-neutral-300 dark:text-neutral-600">
           ★
         </span>
       ))}
@@ -46,17 +46,15 @@ export const StarRating: React.FC<StarRatingProps> = ({
   if (variant === "chip") {
     return (
       <div
-        className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5"
+        className="inline-flex items-center gap-2 rounded-full border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5"
         role="img"
         aria-label={`${label}: ${displayRating} out of 5 stars`}
       >
-        <span className="text-[11px] uppercase tracking-wide text-amber-700 font-semibold">
+        <span className="text-[11px] uppercase tracking-wide text-amber-700 dark:text-yellow-400 font-semibold">
           {label}
         </span>
-        <div className="flex items-center gap-0.5 text-sm">
-          {stars}
-        </div>
-        <span className="text-amber-800 font-semibold text-sm">
+        <div className="flex items-center gap-0.5 text-sm">{stars}</div>
+        <span className="text-amber-800 dark:text-amber-300 font-semibold text-sm">
           {displayRating}
         </span>
       </div>
@@ -65,21 +63,14 @@ export const StarRating: React.FC<StarRatingProps> = ({
 
   return (
     <div
-      className="flex flex-col items-end gap-1 text-base"
+      className="flex items-center gap-1.5 mt-0.5"
       role="img"
-      aria-label={`${label}: ${displayRating} out of 5 stars`}
+      aria-label={`${displayRating} out of 5 stars`}
     >
-      <span className="text-xs uppercase tracking-wide text-neutral-700">
-        {label}
+      <div className="flex items-center gap-px text-sm leading-none">{stars}</div>
+      <span className="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
+        {displayRating}
       </span>
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-0.5 text-2xl">
-          {stars}
-        </div>
-        <span className="text-neutral-700 font-semibold">
-          {displayRating}
-        </span>
-      </div>
     </div>
   );
 };
