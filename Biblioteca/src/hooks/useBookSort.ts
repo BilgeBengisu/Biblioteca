@@ -1,26 +1,22 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { GET_BOOKS } from '../queries/queries';
+import { SEARCH_BOOKS_POPULARITY, SEARCH_BOOKS_TRENDING, SEARCH_BOOKS_SHUFFLE } from '../queries/queries';
 import type { BookData, BooksData } from '../types/Book';
 
 export type SortOption = 'tendencias' | 'aleatorio' | 'popularidad';
 
 export function useBookSort(sortOrder: SortOption) {
-    const { data, loading, error } = useQuery<BooksData>(GET_BOOKS);
-    const books: BookData[] = data?.books ?? [];
+    const popularity = useQuery<BooksData>(SEARCH_BOOKS_POPULARITY, { skip: sortOrder !== 'popularidad' });
+    const trending = useQuery<BooksData>(SEARCH_BOOKS_TRENDING, { skip: sortOrder !== 'tendencias' });
+    const shuffle = useQuery<BooksData>(SEARCH_BOOKS_SHUFFLE, { skip: sortOrder !== 'aleatorio' });
 
-    const sortedBooks = useMemo(() => {
-        switch (sortOrder) {
-            case 'popularidad':
-                return books;
-            case 'aleatorio':
-                return books;
-            case 'tendencias':
-                return books;
-            default:
-                return books;
-        }
-    }, [books, sortOrder]);
+    const { data, loading, error } = sortOrder === 'popularidad'
+        ? popularity
+        : sortOrder === 'tendencias'
+        ? trending
+        : shuffle;
 
-    return { books: sortedBooks, loading, error };
+    const books: BookData[] = useMemo(() => data?.books ?? [], [data]);
+
+    return { books, loading, error };
 }

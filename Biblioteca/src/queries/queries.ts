@@ -52,3 +52,68 @@ export const SEARCH_BOOKS = gql`
   }
 `;
 
+export const SEARCH_BOOKS_POPULARITY = gql`
+  query SearchBooksPopularity($limit: Int, $offset: Int) {
+    books(limit: 100, offset: $offset, order_by: {users_count: desc}) {
+        id
+        slug
+        title
+        image {
+            color
+            url
+        }
+        contributions {
+            author {
+                bio
+                name
+            }
+        }
+        rating
+        description
+    }
+  }
+`;
+
+export const SEARCH_BOOKS_TRENDING = gql`
+  query GetBooks {
+        books {
+            id
+            slug
+            title
+            image {
+            color
+            url
+            }
+            contributions {
+            author {
+                bio
+                name
+            }
+            }
+            rating
+            description
+        }
+    }
+`;
+
+export const SEARCH_BOOKS_SHUFFLE = gql`
+  query GetBooks {
+        books {
+            id
+            slug
+            title
+            image {
+            color
+            url
+            }
+            contributions {
+            author {
+                bio
+                name
+            }
+            }
+            rating
+            description
+        }
+    }
+`;

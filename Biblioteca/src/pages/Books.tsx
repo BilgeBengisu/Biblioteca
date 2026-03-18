@@ -18,6 +18,7 @@ export const Books: React.FC = () => {
 
     if (error) {
         return (
+            console.log(error),
             <div className="text-center py-12 text-red-500">
                 Error al cargar libros.
             </div>
