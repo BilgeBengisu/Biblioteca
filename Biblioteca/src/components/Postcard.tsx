@@ -144,7 +144,7 @@ export const PostCard = ({
                   Compartió sobre
                 </span>
                 {post.rating != null ? (
-                  <StarRating rating={post.rating} variant="chip" label="Tu calificacion" />
+                  <StarRating rating={post.rating} />
                 ) : null}
               </div>
             )}
