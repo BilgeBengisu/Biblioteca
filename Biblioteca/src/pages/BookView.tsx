@@ -121,8 +121,12 @@ export const BookView = () => {
         return <div>Libro no ha sido encontrado</div>;
     }
 
+    const heroStyle = book?.color
+        ? { background: `linear-gradient(to bottom, ${book.color}cc, ${book.color}00)` }
+        : {};
+
     return (
-        <div>
+        <div className="max-w-3xl mx-auto p-4 space-y-4">
             <div className="mb-4">
                 <button
                     type="button"
@@ -138,7 +142,7 @@ export const BookView = () => {
                     ← Volver
                 </button>
             </div>
-            <div className="flex gap-6 relative">
+            <div className="flex gap-6 relative rounded-xl p-4" style={heroStyle}>
                 <img src={book?.cover} alt={book?.title} className="h-64 rounded-lg" />
                 <div className="flex-1 flex justify-between items-center">
                     <div>
