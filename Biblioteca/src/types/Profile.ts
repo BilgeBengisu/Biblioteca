@@ -1,3 +1,7 @@
+import type { UserBookStatus } from "./Book";
+
+export type { UserBookStatus };
+
 export type ProfileRow = {
   id: string;
   username: string | null;
@@ -6,8 +10,6 @@ export type ProfileRow = {
   created_at: string | null;
   updated_at: string | null;
 };
-
-export type UserBookStatus = "want_to_read" | "reading" | "finished";
 
 // get rows from user_books table by user id
 export type UserBookRow = {

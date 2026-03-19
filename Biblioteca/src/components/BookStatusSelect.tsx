@@ -1,23 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getUserBookByBookId, upsertUserBook } from "../services/userBooks";
 import type { UserBookStatus, BookStatusSelectProps } from "../types/Book";
+
+const OPTIONS: { value: UserBookStatus; label: string }[] = [
+  { value: "want_to_read", label: "Quiero leer" },
+  { value: "reading", label: "Leyendo" },
+  { value: "finished", label: "Terminado" },
+];
 
 export const BookStatusSelect = ({
   bookId,
   bookSnapshot,
   userId,
 }: BookStatusSelectProps) => {
-  const [userBookStatus, setUserBookStatus] = useState<UserBookStatus>("want_to_read");
+  const [userBookStatus, setUserBookStatus] = useState<UserBookStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState<boolean>(false);
   const [statusError, setStatusError] = useState<string | null>(null);
-  const [hasUserBookStatus, setHasUserBookStatus] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const canLoad = useMemo(() => !!bookId && !!userId, [bookId, userId]);
+  const canLoad = !!bookId && !!userId;
 
   useEffect(() => {
     if (!bookId || !userId) {
-      setUserBookStatus("want_to_read");
-      setHasUserBookStatus(false);
+      setUserBookStatus(null);
       return;
     }
 
@@ -28,8 +34,7 @@ export const BookStatusSelect = ({
     getUserBookByBookId({ bookId, userId })
       .then((row) => {
         if (cancelled) return;
-        setUserBookStatus(row?.status ?? "want_to_read");
-        setHasUserBookStatus(!!row?.status);
+        setUserBookStatus(row?.status ?? null);
       })
       .catch((err) => {
         console.error(err);
@@ -46,46 +51,107 @@ export const BookStatusSelect = ({
     };
   }, [bookId, userId]);
 
-  const handleStatusChange = async (nextStatus: UserBookStatus | "remove") => {
-    if (!bookId || !userId || !bookSnapshot) return;
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    setUserBookStatus(nextStatus === "remove" ? "want_to_read" : nextStatus);
+  const handleStatusChange = async (nextStatus: UserBookStatus) => {
+    if (!bookId || !userId || !bookSnapshot) return;
+    setOpen(false);
+
+    const previous = userBookStatus;
+    setUserBookStatus(nextStatus);
     setStatusLoading(true);
     setStatusError(null);
 
     try {
-      if (nextStatus === "remove") {
-        await upsertUserBook({ book: bookSnapshot, status: null }); // reset the reading status
-        setHasUserBookStatus(false);
-      } else {
-        await upsertUserBook({ book: bookSnapshot, status: nextStatus });
-        setHasUserBookStatus(true);
-      }
+      await upsertUserBook({ book: bookSnapshot, status: nextStatus });
     } catch (err) {
       console.error(err);
+      setUserBookStatus(previous);
       setStatusError("No se pudo guardar tu estado.");
     } finally {
       setStatusLoading(false);
     }
   };
 
+  const handleRemove = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!bookId || !userId || !bookSnapshot) return;
+
+    const previous = userBookStatus;
+    setUserBookStatus(null);
+    setStatusLoading(true);
+    setStatusError(null);
+
+    try {
+      await upsertUserBook({ book: bookSnapshot, status: null });
+    } catch (err) {
+      console.error(err);
+      setUserBookStatus(previous);
+      setStatusError("No se pudo guardar tu estado.");
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  const selectedLabel = OPTIONS.find((o) => o.value === userBookStatus)?.label;
+  const disabled = statusLoading || !canLoad;
+
   return (
     <div className="mt-4">
       <label className="block text-sm font-medium text-gray-700">Estado de lectura</label>
       {userId ? (
-        <select
-          value={userBookStatus}
-          onChange={(e) => handleStatusChange(e.target.value as UserBookStatus | "remove")}
-          disabled={statusLoading || !canLoad}
-          className={`mt-1 w-48 border rounded px-2 py-1.5 text-sm ${
-            hasUserBookStatus ? "border-red-500 text-red-600" : "border-neutral-300 text-neutral-800"
-          }`}
-        >
-          <option value="want_to_read">Quiero leer</option>
-          <option value="reading">Leyendo</option>
-          <option value="finished">Terminado</option>
-          {hasUserBookStatus && <option value="remove">Quitar</option>}
-        </select>
+        <div ref={containerRef} className="relative inline-block mt-1">
+          {/* Trigger */}
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setOpen((v) => !v)}
+            className={`flex items-center justify-between w-48 border rounded px-3 py-2 text-sm disabled:opacity-50 ${
+              userBookStatus
+                ? "border-red-400 text-red-600 bg-red-50"
+                : "border-neutral-300 text-neutral-500 bg-white"
+            }`}
+          >
+            <span>{selectedLabel ?? "Quiero leer"}</span>
+            {userBookStatus ? (
+              <span
+                role="button"
+                onClick={handleRemove}
+                className="ml-1 text-base text-red-400 hover:text-red-600 leading-none"
+              >
+                ×
+              </span>
+            ) : (
+              <span className="text-neutral-400 text-xs">▾</span>
+            )}
+          </button>
+
+          {/* Dropdown */}
+          {open && (
+            <ul className="absolute left-0 mt-1 w-48 bg-white border border-neutral-200 rounded shadow-md z-10 py-1 text-sm">
+              {OPTIONS.map((opt) => (
+                <li
+                  key={opt.value}
+                  onClick={() => handleStatusChange(opt.value)}
+                  className={`px-3 py-1.5 cursor-pointer hover:bg-neutral-100 ${
+                    userBookStatus === opt.value ? "text-red-600 font-medium" : "text-neutral-700"
+                  }`}
+                >
+                  {opt.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       ) : (
         <p className="mt-1 text-sm text-gray-500">Inicia sesión para guardar tu estado.</p>
       )}
