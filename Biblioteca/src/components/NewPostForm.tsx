@@ -3,6 +3,7 @@ import type { Post } from "../types/Post";
 import { createPost } from "../services/posts";
 import { BookSearchInput, type SearchBook } from "./BookSearchInput";
 import { upsertUserBook } from "../services/userBooks";
+import { Pencil, BookMarked, Star, BookOpen, Bookmark, CheckCheck } from "lucide-react";
 
 type NewPostFormProps = {
   onPostCreated: (post: Post) => void; // callback to add the new post to feed
@@ -102,37 +103,42 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
       (type === "status" && !!selectedBook) ||
       (type === "review" && !!selectedBook && (trimmed.length > 0 || rating > 0));
 
+  const postTypes = [
+    { label: "Escribir algo", value: "text", icon: <Pencil size={14} /> },
+    { label: "Estado", value: "status", icon: <BookMarked size={14} /> },
+    { label: "Reseña", value: "review", icon: <Star size={14} /> },
+  ];
+
+  const statusOptions = [
+    { label: "Quiero leer", value: "want_to_read", icon: <Bookmark size={13} /> },
+    { label: "Leyendo", value: "reading", icon: <BookOpen size={13} /> },
+    { label: "Terminado", value: "finished", icon: <CheckCheck size={13} /> },
+  ];
+
   return (
-    <form className="bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-sm space-y-3" 
-    onSubmit={handleSubmit}
+    <form
+      className="bg-white border border-neutral-200 p-4 rounded-2xl shadow-sm space-y-3"
+      onSubmit={handleSubmit}
     >
       {/* Post type selector */}
-      <div className="flex gap-2">
-        {[
-          { label: "Escribir algo", value: "text" },
-          { label: "Compartir estado", value: "status" },
-          { label: "Reseña", value: "review" },
-        ].map(({ label, value }) => (
+      <div className="flex gap-1.5">
+        {postTypes.map(({ label, value, icon }) => (
           <button
             key={value}
             type="button"
-            className={`px-3 py-1 rounded-full border ${
-              type === value ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-neutral-800"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 ${
+              type === value
+                ? "bg-red-600 text-white"
+                : "text-neutral-500 hover:bg-red-50 hover:text-red-600"
             }`}
             onClick={() => {
               setError(null);
               setType(value as "text" | "status" | "review");
-
-              // Keep state tidy when switching post types
-              if (value === "text") {
-                setSelectedBook(null);
-                setRating(0);
-              }
-              if (value === "status") {
-                setRating(0);
-              }
+              if (value === "text") { setSelectedBook(null); setRating(0); }
+              if (value === "status") { setRating(0); }
             }}
           >
+            {icon}
             {label}
           </button>
         ))}
@@ -140,48 +146,42 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
 
       {/* Book selector for status/review */}
       {(type === "status" || type === "review") && (
-        <BookSearchInput
-          value={selectedBook}
-          onChange={setSelectedBook}
-        />
+        <BookSearchInput value={selectedBook} onChange={setSelectedBook} />
       )}
 
-      {/* Include status selector for status update posts */}
-      {(type === "status") && (
-      <div>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: "Quiero leer", value: "want_to_read" },
-            { label: "Leyendo", value: "reading" },
-            { label: "Terminado", value: "finished" },
-          ].map((s) => (
+      {/* Status selector for status update posts */}
+      {type === "status" && (
+        <div className="flex flex-wrap gap-1.5">
+          {statusOptions.map(({ label, value: sVal, icon }) => (
             <button
-              key={s.value}
+              key={sVal}
               type="button"
-              className={`px-3 py-1 rounded-full border ${
-                status === s.value ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-neutral-800"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-150 ${
+                status === sVal
+                  ? "bg-red-600 text-white"
+                  : "text-neutral-500 hover:bg-red-50 hover:text-red-600"
               }`}
-              onClick={() => setStatus(s.value as typeof status)}
+              onClick={() => setStatus(sVal as typeof status)}
             >
-              {s.label}
+              {icon}
+              {label}
             </button>
           ))}
         </div>
-      </div>
       )}
 
       {/* Rating selector for review posts */}
       {type === "review" && (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-neutral-600 dark:text-neutral-300">Calificación:</span>
+          <span className="text-sm font-medium text-neutral-500 pl-3">Calificación</span>
           <div className="flex items-center">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 type="button"
                 aria-label={`${n} estrellas`}
-                className={`text-2xl leading-none px-1 ${
-                  rating >= n ? "text-yellow-500" : "text-neutral-300 dark:text-neutral-600"
+                className={`text-xl leading-none px-0.5 transition-colors duration-100 ${
+                  rating >= n ? "text-yellow-300" : "text-neutral-300"
                 }`}
                 onClick={() => setRating(n)}
               >
@@ -189,11 +189,10 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
               </button>
             ))}
           </div>
-
           {rating > 0 && (
             <button
               type="button"
-              className="text-xs underline text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200"
+              className="text-xs text-neutral-400 hover:text-red-600 underline transition-colors"
               onClick={() => setRating(0)}
             >
               borrar
@@ -203,29 +202,29 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
       )}
 
       {/* Content textarea */}
-      <div>
-        <textarea
-          className="w-full border rounded p-2 dark:bg-neutral-800 dark:text-white"
-          placeholder={"¿Qué te gustaría compartir?"}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={type === "text" ? 3 : 2}
-        />
-      </div>
+      <textarea
+        className="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 resize-none transition"
+        placeholder="¿Qué te gustaría compartir?"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        rows={type === "text" ? 3 : 2}
+      />
 
       {/* Submit */}
-      <button
-        type="submit"
-        className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-        disabled={isSubmitting || !isValid}
-      >
-        {isSubmitting ? "Publicando..." : "Publicar"}
-      </button>
-      {error && (
-        <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+      <div className="flex items-center justify-between">
+        {error ? (
+          <div className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-600">
+            {error}
+          </div>
+        ) : <span />}
+        <button
+          type="submit"
+          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 transition-colors duration-150"
+          disabled={isSubmitting || !isValid}
+        >
+          {isSubmitting ? "Publicando..." : "Publicar"}
+        </button>
+      </div>
     </form>
   );
 };

@@ -87,70 +87,70 @@ export const BookSearchInput = ({ value, onChange }: BookSearchInputProps) => {
 
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">Libro</label>
+      <label className="block text-sm font-medium text-neutral-500 mb-1 pl-3">Libro</label>
 
       {value ? (
-        <div className="flex items-center gap-3 border rounded p-2 dark:bg-neutral-800 dark:text-white">
+        <div className="flex items-center gap-3 border border-neutral-200 rounded-xl px-3 py-2 bg-white">
           <img
             src={value.coverUrl || "/default-book-cover.png"}
             alt={value.title}
-            className="w-10 h-14 object-cover rounded"
+            className="w-9 h-13 object-cover rounded"
             loading="lazy"
           />
           <div className="min-w-0 flex-1">
-            <div className="font-medium truncate">{value.title}</div>
-            {value.author && <div className="text-sm opacity-70 truncate">{value.author}</div>}
-            </div>
-            <button
-                type="button"
-                className="text-xs underline text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200"
-                onClick={handleClear}
-            >
-                Cambiar
-            </button>
-            </div>
-        ) : (
-            <>
-            <input
-                type="text"
-                value={query}
-                onChange={(e) => handleChange(e.target.value)}
-                placeholder="Busca un libro..."
-                className="w-full border rounded p-2 dark:bg-neutral-800 dark:text-white"
-            />
-
-            {isSearching && <div className="text-sm opacity-70 mt-1">Buscando…</div>}
-
-            <div className="relative">
-                {searchResults.length > 0 && (
-                <ul className="absolute z-10 w-full border mt-1 max-h-48 overflow-y-auto bg-white dark:bg-neutral-900 rounded">
-                    {searchResults.map((book) => (
-                    <li
-                        key={book.id}
-                        className="p-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-700 flex items-center gap-3"
-                        onClick={() => handleSelect(book)}
-                    >
-                        <img
-                        src={book.coverUrl || "/default-book-cover.png"}
-                        alt={book.title}
-                        className="w-10 h-14 object-cover rounded"
-                        loading="lazy"
-                        />
-                        <div className="min-w-0">
-                        <div className="font-medium truncate">{book.title}</div>
-                        {book.author && <div className="text-sm opacity-70 truncate">{book.author}</div>}
-                        </div>
-                    </li>
-                    ))}
-                </ul>
-                )}
-
-                {hasSearched && query.trim() && !isSearching && searchResults.length === 0 && (
-                <div className="text-sm opacity-70 mt-1">No resultados.</div>
-                )}
-            </div>
-            </>
-        )}
+            <div className="font-medium text-sm text-neutral-800 truncate">{value.title}</div>
+            {value.author && <div className="text-xs text-neutral-400 truncate">{value.author}</div>}
+          </div>
+          <button
+            type="button"
+            className="text-xs text-neutral-400 hover:text-red-600 underline transition-colors"
+            onClick={handleClear}
+          >
+            Cambiar
+          </button>
         </div>
-    );
+      ) : (
+        <>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder="Busca un libro..."
+            className="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition"
+          />
+
+          {isSearching && <div className="text-xs text-neutral-400 mt-1">Buscando…</div>}
+
+          <div className="relative">
+            {searchResults.length > 0 && (
+              <ul className="absolute z-10 w-full border border-neutral-200 mt-1 max-h-48 overflow-y-auto bg-white rounded-xl shadow-sm">
+                {searchResults.map((book) => (
+                  <li
+                    key={book.id}
+                    className="px-3 py-2 cursor-pointer hover:bg-red-50 flex items-center gap-3 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                    onClick={() => handleSelect(book)}
+                  >
+                    <img
+                      src={book.coverUrl || "/default-book-cover.png"}
+                      alt={book.title}
+                      className="w-9 h-13 object-cover rounded"
+                      loading="lazy"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm text-neutral-800 truncate">{book.title}</div>
+                      {book.author && <div className="text-xs text-neutral-400 truncate">{book.author}</div>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {hasSearched && query.trim() && !isSearching && searchResults.length === 0 && (
+              <div className="text-xs text-neutral-400 mt-1">Sin resultados.</div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
 };

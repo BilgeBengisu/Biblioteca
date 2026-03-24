@@ -6,6 +6,7 @@ import { PostCard } from "../components/Postcard";
 import { useAuth } from "../contexts/AuthContext";
 import { PostCardSkeleton } from "../components/PostCardSkeleton";
 import { useToggleLike } from "../hooks/useToggleLike";
+import { PostsFilterTabs } from "../components/PostsFilterTabs";
 
 export const Posts = () => {
     const { user } = useAuth();
@@ -16,16 +17,7 @@ export const Posts = () => {
     const [error, setError] = useState<string | null>(null);
     const [loadingPosts, setLoadingPosts] = useState<boolean>(true);
 
-    type FeedFilter = "all" | "following";
-    const [filter, setFilter] = useState<FeedFilter>("all");
-    const feedLabel = (v: FeedFilter) => {
-        switch (v) {
-            case "all":
-            return "Todos";
-            case "following":
-            return "Siguiendo";
-        }
-    };
+    const [filter, setFilter] = useState<"all" | "following">("all");
 
 
     // handler to add newly created post to the posts list
@@ -85,35 +77,11 @@ export const Posts = () => {
     return (
         <div className="max-w-3xl mx-auto p-4 space-y-4">
             <NewPostForm onPostCreated={handlePostCreated} />
-            <div className="flex justify-between items-center">
-                <div className="flex gap-2">
-                    <div className="inline-flex rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-1">
-                    {(["all", "following"] as const).map((v) => {
-                        const active = filter === v;
-
-                        return (
-                        <button
-                            key={v}
-                            type="button"
-                            onClick={() => setFilter(v)}
-                            disabled={v === "following" && !user}
-                            className={[
-                            "px-4 py-2 text-sm rounded-lg transition",
-                            active
-                                ? "bg-neutral-100 dark:bg-neutral-800 font-medium"
-                                : "hover:bg-neutral-50 dark:hover:bg-neutral-800",
-                            v === "following" && !user
-                                ? "opacity-50 cursor-not-allowed"
-                                : "",
-                            ].join(" ")}
-                        >
-                            {feedLabel(v)}
-                        </button>
-                        );
-                    })}
-                    </div>
-                </div>
-            </div>
+            <PostsFilterTabs
+                filter={filter}
+                onChange={setFilter}
+                userLoggedIn={!!user}
+            />
             {loadingPosts && ( // show skeleton while loading posts
                 <>
                 <PostCardSkeleton />

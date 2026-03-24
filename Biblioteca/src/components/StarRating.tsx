@@ -3,12 +3,17 @@ type StarRatingProps = {
   rating: number;
   variant?: "default" | "chip";
   label?: string;
+  size?: "sm" | "md" | "lg";
 };
+
+const STAR_SIZE = { sm: "text-sm", md: "text-xl", lg: "text-2xl" };
+const NUM_SIZE  = { sm: "text-xs", md: "text-sm", lg: "text-base" };
 
 export const StarRating: React.FC<StarRatingProps> = ({
   rating,
   variant = "default",
   label = "Calificacion",
+  size = "sm",
 }) => {
   const clampedRating = Math.max(0, Math.min(5, rating));
   const fullStars = Math.floor(clampedRating);
@@ -23,14 +28,14 @@ export const StarRating: React.FC<StarRatingProps> = ({
   const stars = (
     <>
       {Array.from({ length: fullStars }).map((_, i) => (
-        <span key={`full-${i}`} className="text-yellow-400">
+        <span key={`full-${i}`} className="text-yellow-300">
           ★
         </span>
       ))}
       {hasHalfStar && (
         <span className="relative inline-block text-neutral-300 dark:text-neutral-600">
           ★
-          <span className="absolute left-0 top-0 w-1/2 overflow-hidden text-yellow-400">
+          <span className="absolute left-0 top-0 w-1/2 overflow-hidden text-yellow-300">
             ★
           </span>
         </span>
@@ -50,7 +55,7 @@ export const StarRating: React.FC<StarRatingProps> = ({
         role="img"
         aria-label={`${label}: ${displayRating} out of 5 stars`}
       >
-        <span className="text-[11px] uppercase tracking-wide text-amber-700 dark:text-yellow-400 font-semibold">
+        <span className="text-[11px] uppercase tracking-wide text-amber-700 dark:text-yellow-300 font-semibold">
           {label}
         </span>
         <div className="flex items-center gap-0.5 text-sm">{stars}</div>
@@ -67,8 +72,8 @@ export const StarRating: React.FC<StarRatingProps> = ({
       role="img"
       aria-label={`${displayRating} out of 5 stars`}
     >
-      <div className="flex items-center gap-px text-sm leading-none">{stars}</div>
-      <span className="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
+      <div className={`flex items-center gap-px ${STAR_SIZE[size]} leading-none`}>{stars}</div>
+      <span className={`${NUM_SIZE[size]} text-neutral-500 dark:text-neutral-400 tabular-nums`}>
         {displayRating}
       </span>
     </div>
