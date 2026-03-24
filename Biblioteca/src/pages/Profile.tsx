@@ -31,7 +31,7 @@ export const Profile = () => {
      */
     const currentYear = new Date().getFullYear();
     const {
-        goal, progress, goalLoading, goalError,
+        goal, progress, goalError,
         isEditing, goalInput, goalSaving, goalSaveError,
         onEditClick, onGoalInputChange, onSave, onCancel,
     } = useReadingGoal(profile?.id, currentYear);
@@ -66,17 +66,6 @@ export const Profile = () => {
         );
     }
 
-    // Loading
-    if (loading || goalLoading) {
-        return (
-            <div className="max-w-3xl mx-auto p-6">
-                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
-                    <p className="text-sm text-neutral-600">Cargando perfil…</p>
-                </div>
-            </div>
-        );
-    }
-
     // Error (network/server failure)
     if (profileError || goalError) {
         return (
@@ -89,7 +78,7 @@ export const Profile = () => {
     }
 
     // Error Not found (fetch succeeded but returned null)
-    if (!profile) {
+    if (!loading && !profile) {
         return (
             <div className="max-w-3xl mx-auto p-6">
                 <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
@@ -99,26 +88,29 @@ export const Profile = () => {
         );
     }
 
-    // Displaying profile
-    const avatar =
-        profile.avatar_url ||
-        defaultAvatar;
-    // setting display name
-    const displayName =
-        profile.username ||
-        "usuario";
+    const avatar = profile?.avatar_url || defaultAvatar;
+    const displayName = profile?.username || "usuario";
+
+    const skeletonClass = "rounded bg-neutral-100 dark:bg-neutral-800 animate-pulse";
 
     return (
         <div className="max-w-3xl mx-auto p-6">
         <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6 flex items-start gap-6">
             <div className="ring-1 ring-neutral-200 dark:ring-neutral-800 flex-shrink-0 rounded-full">
-            <img src={avatar} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
+            {loading
+                ? <div className={`w-16 h-16 rounded-full ${skeletonClass}`} />
+                : <img src={avatar} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
+            }
             </div>
 
             <div className="flex-1 min-w-0 space-y-2">
                 <div className="flex items-center justify-between gap-4">
-                    <h1 className="text-2xl font-semibold tracking-tight truncate">{displayName}</h1>
-                    {profile.id && !isOwnProfile && (
+                    <h1 className="text-2xl font-semibold tracking-tight truncate">
+                        {loading
+                            ? <span className={`inline-block w-36 h-6 ${skeletonClass}`} />
+                            : displayName}
+                    </h1>
+                    {profile?.id && !isOwnProfile && (
                     <FollowButton
                         viewerId={user.id}
                         profileId={profile.id}
@@ -139,18 +131,21 @@ export const Profile = () => {
                     {isOwnProfile && ( // can't view email unless on your own profile
                     <p className="text-sm text-neutral-600 truncate">{user.email}</p>
                     )}
-                    {profile.id && 
-                    <FollowCounts 
-                        profileId={profile.id} 
-                        refreshKey={followRefreshKey} 
-                        className="mt-1" 
+                    {profile?.id &&
+                    <FollowCounts
+                        profileId={profile.id}
+                        refreshKey={followRefreshKey}
+                        className="mt-1"
                     />}
 
-                    {profile.bio && (
-                    <p className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-pre-line">
-                        {profile.bio}
-                    </p>
-                    )}
+                    {loading
+                        ? <div className={`w-48 h-4 ${skeletonClass}`} />
+                        : profile?.bio && (
+                            <p className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-pre-line">
+                                {profile.bio}
+                            </p>
+                        )
+                    }
 
                     <ReadingGoalWidget
                         goal={goal?.target ?? null}

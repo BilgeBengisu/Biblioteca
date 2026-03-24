@@ -8,10 +8,7 @@ type FollowCountsProps = {
 };
 
 export function FollowCounts({ profileId, refreshKey = 0, className }: FollowCountsProps) {
-  const [counts, setCounts] = useState<{ followers: number; following: number }>({
-    followers: 0,
-    following: 0,
-  });
+  const [counts, setCounts] = useState<{ followers: number; following: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,13 +36,17 @@ export function FollowCounts({ profileId, refreshKey = 0, className }: FollowCou
       <div className="flex items-center gap-4 text-sm text-neutral-600">
         <span>
           <span className="font-medium text-neutral-900 dark:text-neutral-100">
-            {counts.followers}
+            {counts == null
+              ? <span className="inline-block w-5 h-3 rounded bg-neutral-100 dark:bg-neutral-700 animate-pulse align-middle" />
+              : counts.followers}
           </span>{" "}
           Seguidores
         </span>
         <span>
           <span className="font-medium text-neutral-900 dark:text-neutral-100">
-            {counts.following}
+            {counts == null
+              ? <span className="inline-block w-5 h-3 rounded bg-neutral-100 dark:bg-neutral-700 animate-pulse align-middle" />
+              : counts.following}
           </span>{" "}
           Siguiendo
         </span>

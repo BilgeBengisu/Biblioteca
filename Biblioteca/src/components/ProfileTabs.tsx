@@ -14,7 +14,7 @@ export const ProfileTabs = ({
         onClick={() => onChange("library")}
         className={`px-4 py-2 text-sm rounded-lg transition ${
           activeTab === "library"
-            ? "bg-neutral-100 dark:bg-neutral-800 font-medium"
+            ? "bg-red-100 dark:bg-neutral-800 font-medium"
             : "hover:bg-neutral-50 dark:hover:bg-neutral-800"
         }`}
       >
@@ -26,7 +26,7 @@ export const ProfileTabs = ({
         onClick={() => onChange("posts")}
         className={`px-4 py-2 text-sm rounded-lg transition ${
           activeTab === "posts"
-            ? "bg-neutral-100 dark:bg-neutral-800 font-medium"
+            ? "bg-red-100 dark:bg-neutral-800 font-medium"
             : "hover:bg-neutral-50 dark:hover:bg-neutral-800"
         }`}
       >
