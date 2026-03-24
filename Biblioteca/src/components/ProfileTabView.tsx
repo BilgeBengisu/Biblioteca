@@ -89,7 +89,7 @@ export const ProfileTabView = ({
                     className={[
                     "px-3 py-1.5 rounded-full text-sm border transition",
                     active
-                        ? "bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white"
+                        ? "bg-red-600 text-white border-red-600"
                         : "bg-transparent text-neutral-700 border-neutral-200 hover:bg-neutral-50 dark:text-neutral-200 dark:border-neutral-700 dark:hover:bg-neutral-800",
                     ].join(" ")}
                 >

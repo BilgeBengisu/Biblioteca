@@ -1,10 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import type { SearchState, BookResult, UserResult } from "../types/Search";
+import type { SearchState, SearchType, BookResult, UserResult } from "../types/Search";
 import type { BookData } from "../types/Book";
 import { BookCard } from "./BookCard";
+import { BookCardSkeleton } from "./BookCardSkeleton";
 import { UserCard } from "./UserCard";
 
-export function SearchResults({ state }: { state: SearchState }) {
+export function SearchResults({ state, scope }: { state: SearchState; scope: SearchType }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -14,7 +15,14 @@ export function SearchResults({ state }: { state: SearchState }) {
   }
 
   if (state.status === "loading") {
-    return <p>Cargando…</p>;
+    if (scope !== "books") return;
+    return (
+      <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <li key={i}><BookCardSkeleton /></li>
+        ))}
+      </ul>
+    );
   }
 
   if (state.status === "error") {
@@ -55,14 +63,12 @@ export function SearchResults({ state }: { state: SearchState }) {
   if (users.length === 0) return <p>No hay resultados.</p>;
 
   return (
-    <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-      {users.map((u) => {
-        return (
-          <li key={u.id}>
-            <UserCard user={u} />
-          </li>
-        );
-      })}
+    <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {users.map((u) => (
+        <li key={u.id}>
+          <UserCard user={u} />
+        </li>
+      ))}
     </ul>
   );
 }

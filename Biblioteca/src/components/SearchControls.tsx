@@ -29,10 +29,10 @@ export function SearchControls({
             type="button"
             onClick={() => onScopeChange(v)}
             className={[
-              "px-4 py-2 text-sm rounded-lg transition",
+              "px-3 py-1.5 rounded-full text-sm border transition",
               active
-                ? "bg-neutral-100 dark:bg-neutral-800 font-medium"
-                : "hover:bg-neutral-50 dark:hover:bg-neutral-800",
+                ? "bg-red-600 text-white border-red-600"
+                : "bg-transparent text-neutral-700 border-neutral-200 hover:bg-neutral-50 dark:text-neutral-200 dark:border-neutral-700 dark:hover:bg-neutral-800",
             ].join(" ")}
             aria-pressed={active}
           >
@@ -55,6 +55,7 @@ export function SearchControls({
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           aria-label="Search query"
+          className="border border-black rounded px-3 py-2 w-full focus:outline-none"
         />
       </form>
     </div>

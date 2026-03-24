@@ -26,6 +26,9 @@ export const Books = () => {
 
     return (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-10 space-y-4">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Explora Libros</h1>
+            </div>
             <div className="flex items-center gap-2 mb-6">
                 <span className="text-sm text-neutral-600">Ordenar:</span>
                 <select

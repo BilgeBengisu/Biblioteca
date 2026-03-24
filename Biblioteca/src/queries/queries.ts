@@ -46,7 +46,7 @@ export const GET_BOOK_BY_SLUG = gql`
 
 export const SEARCH_BOOKS = gql`
   query SearchBooks($query: String!, $perPage: Int, $page: Int) {
-    search(query: $query, query_type: "books", per_page: $perPage, page: $page) {
+    search(query: $query, query_type: "books", per_page: 25, page: $page) {
       results
     }
   }
@@ -75,25 +75,25 @@ export const SEARCH_BOOKS_POPULARITY = gql`
 `;
 
 export const SEARCH_BOOKS_TRENDING = gql`
-  query GetBooks {
-        books {
-            id
-            slug
-            title
-            image {
+  query SearchBooksTrending($limit: Int, $offset: Int) {
+    books(limit: 100, offset: $offset, order_by: {prompts_count: desc}) {
+        id
+        slug
+        title
+        image {
             color
             url
-            }
-            contributions {
+        }
+        contributions {
             author {
                 bio
                 name
             }
-            }
-            rating
-            description
         }
+        rating
+        description
     }
+  }
 `;
 
 export const SEARCH_BOOKS_SHUFFLE = gql`
