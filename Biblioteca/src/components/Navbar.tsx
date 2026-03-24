@@ -1,15 +1,20 @@
-import { Link, useLocation } from "react-router";
+import { NavLink, Link, useLocation } from "react-router";
 import logo from "../assets/logo.png";
 import "./Navbar.css";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import default_avatar from "../assets/default-avatar.svg";
+import { BookOpen, Library, Search, LogOut, LogIn, UserPlus } from "lucide-react";
 
 export const Navbar = () => {
     const { user, profile, signOut } = useAuth();
     const location = useLocation();
     const hideLinks = location.pathname === "/complete-profile";
+
+    const navClass = ({ isActive }: { isActive: boolean }) =>
+        isActive ? "nav-link nav-link--active" : "nav-link";
+
     return (
-        <nav  className="navbar"> 
+        <nav className="navbar">
             <div>
                 <div className="navbar-logo">
                     <Link to={"/"}>
@@ -22,41 +27,54 @@ export const Navbar = () => {
                     {user ? (
                         <>
                             <li>
-                                <Link to="/posts">Publicaciones</Link>
+                                <NavLink to="/posts" className={navClass}>
+                                    <BookOpen size={15} /> Publicaciones
+                                </NavLink>
                             </li>
                             <li>
-                                <Link to="/books">Libros</Link>
+                                <NavLink to="/books" className={navClass}>
+                                    <Library size={15} /> Libros
+                                </NavLink>
                             </li>
                             <li>
-                                <Link to="/search" className="navbar-search-btn">
-                                    Buscar
-                                </Link>
+                                <NavLink to="/search" className={navClass}>
+                                    <Search size={15} /> Buscar
+                                </NavLink>
                             </li>
                             <li>
-                                <Link to="/profile" className="profile-link">
+                                <NavLink to="/profile" className={({ isActive }) =>
+                                    isActive ? "nav-link nav-link--active profile-link" : "nav-link profile-link"
+                                }>
                                     <img
                                         src={profile?.avatar_url || default_avatar}
                                         alt="Profile"
                                         className="navbar-avatar"
                                     />
-                                </Link>
+                                    Perfil
+                                </NavLink>
                             </li>
                             <li>
-                                <button onClick={signOut}>Cerrar sesión</button>
+                                <button className="nav-link nav-link--signout" onClick={signOut}>
+                                    <LogOut size={15} /> Cerrar sesión
+                                </button>
                             </li>
                         </>
                     ) : (
                         <>
                             <li>
-                                <Link to="/login">Entrar</Link>
+                                <NavLink to="/login" className={navClass}>
+                                    <LogIn size={15} /> Entrar
+                                </NavLink>
                             </li>
                             <li>
-                                <Link to="/register">Registrarse</Link>
+                                <NavLink to="/register" className={navClass}>
+                                    <UserPlus size={15} /> Registrarse
+                                </NavLink>
                             </li>
                         </>
                     )}
                 </ul>
             )}
         </nav>
-    )
+    );
 };
