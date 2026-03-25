@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { deletePost } from "../services/posts";
 import { getCommentCountByPostId } from "../services/comments";
 import { Link } from "react-router-dom";
-import { Heart, MessageSquare, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Trash2 } from "lucide-react";
 import { StarRating } from "./StarRating";
 import { BookInlineCard } from "./BookInlineCard";
 import { CommentThread } from "./CommentThread";
@@ -197,7 +197,7 @@ export const PostCard = ({
           onClick={() => onToggleLike(post.id, post.liked_by_me ?? false)}
           className="inline-flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-red-500"
         >
-          <Heart className={`w-5 h-5 transition-all hover:rotate-3 ${post.liked_by_me ? 'fill-red-500 stroke-red-500' : 'fill-none'}`} />
+          <Heart className={`w-4 h-4 transition-all hover:rotate-3 ${post.liked_by_me ? 'fill-red-500 stroke-red-500' : 'fill-none'}`} />
           {post.like_count || 0}
         </button>
         {showComments && (
@@ -207,7 +207,7 @@ export const PostCard = ({
             aria-expanded={isCommentsOpen}
             className="inline-flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
           >
-            <MessageSquare className="w-5 h-5 fill-none" />
+            <MessageCircle className="w-4 h-4 fill-none" />
             {commentCount ?? "…"}
           </button>
         )}

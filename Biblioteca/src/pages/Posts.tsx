@@ -13,7 +13,6 @@ export const Posts = () => {
     const [posts, setPosts] = useState<Post[]>([]);
 
     // loading and error states for more responsive UI
-    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [loadingPosts, setLoadingPosts] = useState<boolean>(true);
 
@@ -55,7 +54,6 @@ export const Posts = () => {
             })
             .finally(() => {
             if (cancelled) return;
-            setLoading(false);
             setLoadingPosts(false);
             });
 
@@ -66,10 +64,6 @@ export const Posts = () => {
 
     const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
 
-    if (loading) {
-        return <p className="text-center text-sm text-gray-500">Cargando publicaciones</p>;
-    }
-    
     if (error) {
         return <p className="text-center text-sm text-red-500">{error}</p>;
     }
@@ -96,7 +90,7 @@ export const Posts = () => {
                 onDelete={handlePostDeleted}
                 onToggleLike={handleToggleLike}/> // the callback to update UI on deletion
             ))}
-            {posts.length === 0 &&
+            {posts.length === 0 && !loadingPosts &&
                 <p className="text-center text-sm text-gray-500">
                     No hay publicaciones todavía.
                 </p>
