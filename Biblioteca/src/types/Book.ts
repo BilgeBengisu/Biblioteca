@@ -1,5 +1,9 @@
 export interface BooksData {
   books?: BookData[];
+  books_trending?: {
+    ids?: number[];
+    error?: string | null;
+  };
 }
 
 export interface BookData {

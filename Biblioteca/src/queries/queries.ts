@@ -54,7 +54,7 @@ export const SEARCH_BOOKS = gql`
 
 export const SEARCH_BOOKS_POPULARITY = gql`
   query SearchBooksPopularity($limit: Int, $offset: Int) {
-    books(limit: 100, offset: $offset, order_by: {users_count: desc}) {
+    books(limit: $limit, offset: $offset, order_by: {users_count: desc}) {
         id
         slug
         title
@@ -75,8 +75,17 @@ export const SEARCH_BOOKS_POPULARITY = gql`
 `;
 
 export const SEARCH_BOOKS_TRENDING = gql`
-  query SearchBooksTrending($limit: Int, $offset: Int) {
-    books(limit: 100, offset: $offset, order_by: {prompts_count: desc}) {
+  query SearchBooksTrending($from: date!, $to: date!, $limit: Int!, $offset: Int!) {
+    books_trending(from: $from, to: $to, limit: $limit, offset: $offset) {
+        ids
+        error
+    }
+  }
+`;
+
+export const GET_BOOKS_BY_IDS = gql`
+  query GetBooksByIds($ids: [Int!]!) {
+    books(where: { id: { _in: $ids } }) {
         id
         slug
         title
