@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../supabase-client";
 import type { User, AuthError } from "@supabase/supabase-js";
 import type { ProfileRow } from "../types/Profile";
 import { getProfileById } from "../services/profiles";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type SignUpProfile = {
   username?: string;
@@ -18,88 +19,69 @@ interface AuthContextType {
   signUpWithPassword: (email: string, password: string, profile?: SignUpProfile) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const profileCacheKey = (userId: string) => `biblioteca_profile_${userId}`;
+
+function readCachedProfile(userId: string): ProfileRow | undefined {
+  try {
+    const raw = sessionStorage.getItem(profileCacheKey(userId));
+    return raw ? (JSON.parse(raw) as ProfileRow) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
-  // this gives profile request a unique ticket number
-  // useRef is preferable over useState because it doesn't trigger a re-render at every increment 
-  // and stays stable across renders 
-  const profileRequestId = useRef(0); 
+  const queryClient = useQueryClient();
 
-  // loading profile in authContext makes its reusage in navbar and profile page better
-  const loadProfileForUser = async (currentUser: User | null) => {
-    // this line marks the async call (no two calls share the same id and the latest one is prefered)
-    // the conditional check profileRequestId.current === requestId makes the older requestId outdated
-    const requestId = ++profileRequestId.current;
-
-    if (!currentUser) {
-      setProfile(null);
-      return;
-    }
-
-    setProfileLoading(true);
-    try {
-      const data = await getProfileById(currentUser.id);
-      if (profileRequestId.current === requestId) {
-        setProfile(data);
-      }
-    } catch (error) {
-      if (profileRequestId.current === requestId) {
-        setProfile(null);
-      }
-      console.error("Error loading profile:", error);
-    } finally {
-      if (profileRequestId.current === requestId) {
-        setProfileLoading(false);
-      }
-    }
-  };
+  const { data: profile = null, isLoading: profileLoading } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const data = await getProfileById(user!.id);
+      // keep sessionStorage in sync so the next page load is instant
+      if (data) sessionStorage.setItem(profileCacheKey(user!.id), JSON.stringify(data));
+      return data;
+    },
+    enabled: !!user,
+    staleTime: Infinity,
+    initialData: user?.id ? readCachedProfile(user.id) : undefined,
+  });
 
   useEffect(() => {
-    // load initial user
-    const init = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user ?? null);
-      await loadProfileForUser(user ?? null);
-      setAuthLoading(false);
-    };
-
-    init();
-
-    // listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       const nextUser = session?.user ?? null;
       setUser(nextUser);
-      void loadProfileForUser(nextUser);
+
+      if (event === "SIGNED_OUT") {
+        queryClient.removeQueries({ queryKey: ["profile"] });
+        sessionStorage.clear();
+      } else if (event === "USER_UPDATED" && nextUser) {
+        // force a fresh fetch if the user's account was updated
+        queryClient.invalidateQueries({ queryKey: ["profile", nextUser.id] });
+      }
+
       setAuthLoading(false);
     });
 
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   const signInWithGoogle = async () => {
     console.log("OAuth start origin:", window.location.origin);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // IMPORTANT: this keeps the redirect consistent
-        // This ensures the user is redirected to the AuthCallback temporary landing page after OAuth
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-
-    // signInWithOAuth typically redirects, so data is not that useful here
     return { error };
   };
 
@@ -119,11 +101,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: {
         data: {
           username: profile?.username ?? null,
-          avatar_url: profile?.avatarUrl ?? null, // matches your trigger
+          avatar_url: profile?.avatarUrl ?? null,
         },
       },
     });
-
     return { error };
   };
 
@@ -132,11 +113,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
-  const refreshProfile = async () => {
-    await loadProfileForUser(user);
+  const refreshProfile = () => {
+    if (user) {
+      sessionStorage.removeItem(profileCacheKey(user.id));
+      queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+    }
   };
 
-  return ( // exporting the context Provider
+  return (
     <AuthContext.Provider
       value={{
         user,
@@ -154,7 +138,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) throw new Error("useAuth must be used within an AuthProvider");
