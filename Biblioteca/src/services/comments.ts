@@ -40,28 +40,28 @@ export async function getCommentsByPostId(postId: string): Promise<Comment[]> {
 
   const commentIds = comments.map((c) => c.id);
 
-  const { data: likesData, error: likesError } = await supabase
-    .from("comment_likes")
-    .select("comment_id, user_id")
-    .in("comment_id", commentIds);
+  const [{ data: allLikesData, error: likesError }, { data: myLikesData, error: myLikesError }] =
+    await Promise.all([
+      supabase.from("comment_likes").select("comment_id").in("comment_id", commentIds),
+      user?.id
+        ? supabase.from("comment_likes").select("comment_id").in("comment_id", commentIds).eq("user_id", user.id)
+        : Promise.resolve({ data: [] as { comment_id: string }[], error: null }),
+    ]);
 
-  if (likesError) {
-    console.error(likesError);
-    return comments;
-  }
+  if (likesError) { console.error(likesError); return comments; }
+  if (myLikesError) console.error(myLikesError);
 
   const likeCounts = new Map<string, number>();
-  const likedByMe = new Set<string>();
-
-  for (const like of likesData ?? []) {
-    likeCounts.set(like.comment_id, (likeCounts.get(like.comment_id) ?? 0) + 1);
-    if (user?.id && like.user_id === user.id) likedByMe.add(like.comment_id);
+  for (const { comment_id } of allLikesData ?? []) {
+    likeCounts.set(comment_id, (likeCounts.get(comment_id) ?? 0) + 1);
   }
+
+  const likedByMe = new Set((myLikesData ?? []).map((r) => r.comment_id));
 
   return comments.map((comment) => ({
     ...comment,
     like_count: likeCounts.get(comment.id) ?? 0,
-    liked_by_me: user?.id ? likedByMe.has(comment.id) : false,
+    liked_by_me: likedByMe.has(comment.id),
   }));
 }
 
@@ -112,15 +112,33 @@ export async function createComment(input: CreateCommentInput): Promise<Comment>
 }
 
 export async function deleteComment(commentId: string, userId?: string): Promise<void> {
-  let query = supabase
-    .from("comments")
-    .delete()
-    .eq("id", commentId);
+  // Collect all descendant IDs via BFS so we can delete them before the root,
+  // avoiding orphaned rows if the DB has no ON DELETE CASCADE on parent_id.
+  const descendantIds: string[] = [];
+  let currentLevel = [commentId];
 
+  while (currentLevel.length > 0) {
+    const { data } = await supabase
+      .from("comments")
+      .select("id")
+      .in("parent_id", currentLevel);
+    if (!data || data.length === 0) break;
+    const nextLevel = (data as { id: string }[]).map((r) => r.id);
+    descendantIds.push(...nextLevel);
+    currentLevel = nextLevel;
+  }
+
+  if (descendantIds.length > 0) {
+    const { error: descError } = await supabase
+      .from("comments")
+      .delete()
+      .in("id", descendantIds);
+    if (descError) throw descError;
+  }
+
+  let query = supabase.from("comments").delete().eq("id", commentId);
   if (userId) query = query.eq("user_id", userId);
-
   const { error } = await query;
-
   if (error) throw error;
 }
 

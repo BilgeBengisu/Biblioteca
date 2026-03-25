@@ -32,55 +32,60 @@ export function useComments(postId: string) {
     void refresh();
   }, [refresh]);
 
-  const add = useCallback(
-    async (input: CreateCommentInput) => {
-      setError(null);
-      const created = await createComment(input);
-      setComments((prev) => [created, ...prev]);
-      return created;
-    },
-    []
-  );
+  const add = async (input: CreateCommentInput) => {
+    setError(null);
+    const created = await createComment(input);
+    setComments((prev) => [created, ...prev]);
+    return created;
+  };
 
-  const remove = useCallback(async (commentId: string, userId?: string) => {
+  const remove = async (commentId: string, userId?: string) => {
     setError(null);
     await deleteComment(commentId, userId);
-    setComments((prev) => prev.filter((c) => c.id !== commentId));
-  }, []);
+    setComments((prev) => {
+      const toRemove = new Set<string>();
+      const queue = [commentId];
+      while (queue.length > 0) {
+        const id = queue.pop()!;
+        toRemove.add(id);
+        for (const c of prev) {
+          if (c.parent_id === id) queue.push(c.id);
+        }
+      }
+      return prev.filter((c) => !toRemove.has(c.id));
+    });
+  };
 
-  const toggleLike = useCallback(
-    async (commentId: string, currentlyLiked: boolean, userId?: string) => {
-      if (!userId) return;
+  const toggleLike = async (commentId: string, currentlyLiked: boolean, userId?: string) => {
+    if (!userId) return;
 
+    setComments((prev) =>
+      prev.map((c) => {
+        if (c.id !== commentId) return c;
+        const nextLiked = !currentlyLiked;
+        const currentCount = c.like_count ?? 0;
+        const nextCount = nextLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
+        return { ...c, liked_by_me: nextLiked, like_count: nextCount };
+      })
+    );
+
+    try {
+      if (currentlyLiked) await unlikeComment(commentId, userId);
+      else await likeComment(commentId, userId);
+    } catch (err) {
+      console.error(err);
       setComments((prev) =>
         prev.map((c) => {
           if (c.id !== commentId) return c;
-          const nextLiked = !currentlyLiked;
           const currentCount = c.like_count ?? 0;
-          const nextCount = nextLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
-          return { ...c, liked_by_me: nextLiked, like_count: nextCount };
+          const revertedCount = currentlyLiked
+            ? currentCount + 1
+            : Math.max(0, currentCount - 1);
+          return { ...c, liked_by_me: currentlyLiked, like_count: revertedCount };
         })
       );
-
-      try {
-        if (currentlyLiked) await unlikeComment(commentId, userId);
-        else await likeComment(commentId, userId);
-      } catch (err) {
-        console.error(err);
-        setComments((prev) =>
-          prev.map((c) => {
-            if (c.id !== commentId) return c;
-            const currentCount = c.like_count ?? 0;
-            const revertedCount = currentlyLiked
-              ? currentCount + 1
-              : Math.max(0, currentCount - 1);
-            return { ...c, liked_by_me: currentlyLiked, like_count: revertedCount };
-          })
-        );
-      }
-    },
-    []
-  );
+    }
+  };
 
   return {
     comments,

@@ -25,7 +25,6 @@ export const CommentThread = ({
     comments,
     loading,
     error,
-    refresh,
     addComment,
     deleteComment,
     toggleLike,
@@ -60,9 +59,7 @@ export const CommentThread = ({
   };
 
   const handleDelete = async (commentId: string) => {
-    if (!confirm("¿Eliminar comentario?")) return;
     await deleteComment(commentId, user?.id);
-    await refresh();
   };
 
   const handleToggleLike = async (commentId: string, currentlyLiked: boolean) => {

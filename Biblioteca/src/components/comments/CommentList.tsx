@@ -9,7 +9,7 @@ type CommentListProps = {
   currentUserId?: string | null;
   replyToId?: string | null;
   onReply: (commentId: string) => void;
-  onDelete: (commentId: string) => void;
+  onDelete: (commentId: string) => Promise<void>;
   onToggleLike: (commentId: string, currentlyLiked: boolean) => void;
   onSubmitReply: (parentId: string, content: string) => Promise<void>;
   onCancelAction: () => void;
@@ -51,6 +51,7 @@ export const CommentList = ({
                 <CommentComposer
                   placeholder="Escribe una respuesta..."
                   submitLabel="Responder"
+                  autoFocus={true}
                   onCancel={onCancelAction}
                   onSubmit={(content) => onSubmitReply(node.id, content)}
                 />

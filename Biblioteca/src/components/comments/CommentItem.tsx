@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import default_avatar from "../../assets/default-avatar.svg";
@@ -8,7 +9,7 @@ type CommentItemProps = {
   canReply: boolean;
   canDelete: boolean;
   onReply: (commentId: string) => void;
-  onDelete: (commentId: string) => void;
+  onDelete: (commentId: string) => Promise<void>;
   onToggleLike: (commentId: string, currentlyLiked: boolean) => void;
 };
 
@@ -21,6 +22,7 @@ export const CommentItem = ({
   onToggleLike,
 }: CommentItemProps) => {
   const author = comment.author;
+  const [pendingDelete, setPendingDelete] = useState(false);
 
   return (
     <div className="rounded-xl border border-neutral-100 bg-white p-3 shadow-sm">
@@ -61,9 +63,31 @@ export const CommentItem = ({
               </button>
             )}
             {canDelete && (
-              <button type="button" onClick={() => onDelete(comment.id)} className="hover:underline">
-                Eliminar
-              </button>
+              pendingDelete ? (
+                <>
+                  <span className="text-neutral-500">¿Seguro?</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await onDelete(comment.id);
+                      } catch {
+                        setPendingDelete(false);
+                      }
+                    }}
+                    className="text-red-500 hover:underline"
+                  >
+                    Sí
+                  </button>
+                  <button type="button" onClick={() => setPendingDelete(false)} className="hover:underline">
+                    No
+                  </button>
+                </>
+              ) : (
+                <button type="button" onClick={() => setPendingDelete(true)} className="hover:underline">
+                  Eliminar
+                </button>
+              )
             )}
           </div>
         </div>
