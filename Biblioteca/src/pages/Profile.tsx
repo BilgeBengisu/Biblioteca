@@ -2,7 +2,7 @@ import  { useAuth } from "../contexts/AuthContext";
 import defaultAvatar from "../assets/default-avatar.svg";
 import { useState } from "react";
 import { ProfileTabView } from "../components/ProfileTabView";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { FollowButton } from "../components/FollowButton";
 import { FollowCounts } from "../components/FollowCounts";
 import { useToggleLike } from "../hooks/useToggleLike";
@@ -52,18 +52,9 @@ export const Profile = () => {
      */
     const { library, libraryLoading, libraryError } = useLibrary(profile?.id, activeTab === "library");
 
-    // If not logged in yet
-    if (!user) {
-        return (
-            <div className="max-w-3xl mx-auto p-6">
-                <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-6">
-                    <h1 className="text-2xl font-semibold tracking-tight">No registrado</h1>
-                    <p className="text-sm text-neutral-600 mt-2">
-                        Por favor, inicia sesión para ver tu perfil.
-                    </p>
-                </div>
-            </div>
-        );
+    // Bare /profile route means "my profile" — requires auth
+    if (!user && !username) {
+        return <Navigate to="/login" replace />;
     }
 
     // Error (network/server failure)
@@ -110,7 +101,7 @@ export const Profile = () => {
                             ? <span className={`inline-block w-36 h-6 ${skeletonClass}`} />
                             : displayName}
                     </h1>
-                    {profile?.id && !isOwnProfile && (
+                    {profile?.id && !isOwnProfile && user && (
                     <FollowButton
                         viewerId={user.id}
                         profileId={profile.id}
@@ -128,7 +119,7 @@ export const Profile = () => {
                     )}
                 </div>
                 <>
-                    {isOwnProfile && ( // can't view email unless on your own profile
+                    {isOwnProfile && user && ( // can't view email unless on your own profile
                     <p className="text-sm text-neutral-600 truncate">{user.email}</p>
                     )}
                     {profile?.id &&
