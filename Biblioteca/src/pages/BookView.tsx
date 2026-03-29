@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { StarRating } from "../components/StarRating";
 import { PostCard } from "../components/Postcard";
 import { PostCardSkeleton } from "../components/PostCardSkeleton";
-import { BookViewSkeleton } from "../components/BookViewSkeleton";
 import type { Post } from "../types/Post";
 import { getPostsByBook } from "../services/posts";
 import { useAuth } from "../contexts/AuthContext";
