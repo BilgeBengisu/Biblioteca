@@ -70,7 +70,11 @@ export const Posts = () => {
 
     return (
         <div className="max-w-3xl mx-auto p-4 space-y-4">
-            <NewPostForm onPostCreated={handlePostCreated} />
+            {user ? (
+                <NewPostForm onPostCreated={handlePostCreated} />
+            ) : (
+                <p className="text-center text-sm text-gray-500">Inicia sesión para publicar.</p>
+            )}
             <PostsFilterTabs
                 filter={filter}
                 onChange={setFilter}
