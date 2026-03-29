@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { SEARCH_BOOKS_POPULARITY, SEARCH_BOOKS_TRENDING, SEARCH_BOOKS_SHUFFLE, GET_BOOKS_BY_IDS } from '../queries/queries';
 import type { BooksData } from '../types/Book';
 
-export type SortOption = 'tendencias' | 'aleatorio' | 'popularidad';
+export type SortOption = 'tendencias' | 'aleatorio' | 'popular';
 
 export function useBookSort(sortOrder: SortOption) {
     const now = new Date();
@@ -11,7 +11,7 @@ export function useBookSort(sortOrder: SortOption) {
     const from = new Date(now.setMonth(now.getMonth() - 1)).toISOString().split('T')[0];
 
     const popularity = useQuery<BooksData>(SEARCH_BOOKS_POPULARITY, {
-        skip: sortOrder !== 'popularidad',
+        skip: sortOrder !== 'popular',
         variables: { limit: 100, offset: 0 },
     });
     const trending = useQuery<BooksData>(SEARCH_BOOKS_TRENDING, {
@@ -29,12 +29,12 @@ export function useBookSort(sortOrder: SortOption) {
 
     const books = useMemo(() => {
         if (sortOrder === 'tendencias') return trendingBooks.data?.books ?? [];
-        if (sortOrder === 'popularidad') return popularity.data?.books ?? [];
+        if (sortOrder === 'popular') return popularity.data?.books ?? [];
         return shuffle.data?.books ?? [];
     }, [sortOrder, trendingBooks.data, popularity.data, shuffle.data]);
 
-    const loading = { tendencias: trending.loading || trendingBooks.loading, popularidad: popularity.loading, aleatorio: shuffle.loading }[sortOrder];
-    const error = { tendencias: trending.error || trendingBooks.error, popularidad: popularity.error, aleatorio: shuffle.error }[sortOrder];
+    const loading = { tendencias: trending.loading || trendingBooks.loading, popular: popularity.loading, aleatorio: shuffle.loading }[sortOrder];
+    const error = { tendencias: trending.error || trendingBooks.error, popular: popularity.error, aleatorio: shuffle.error }[sortOrder];
 
     return { books, loading, error };
 }

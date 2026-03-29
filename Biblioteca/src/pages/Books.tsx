@@ -38,7 +38,7 @@ export const Books = () => {
                 >
                     <option value="tendencias">Tendencias</option>
                     <option value="aleatorio">Aleatorio</option>
-                    <option value="popularidad">Popularidad</option>
+                    <option value="popular">Popular</option>
                 </select>
             </div>
 
