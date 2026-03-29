@@ -228,14 +228,12 @@ export const BookView = () => {
             <div>
                 {selectedSection === "descripcion" && (
                 <section className="mt-6">
-                    <h2 className="text-2xl font-semibold mb-4">Descripción</h2>
                     <p className="text-gray-800 leading-relaxed">{book?.description}</p>
                 </section>
                 )}
 
                 {selectedSection === "author" && (
                 <section className="mt-6">
-                    <h2 className="text-2xl font-semibold mb-4">Autor</h2>
                     <p className="text-gray-800 leading-relaxed">
                     {book?.authorBio ||
                         `Información del autor ${book?.author} próximamente.`}
@@ -245,7 +243,6 @@ export const BookView = () => {
 
                 {selectedSection === "posts" && (
                 <section className="mt-6">
-                    <h2 className="text-2xl font-semibold mb-4">Reseñas</h2>
                     {postsLoading && (
                         <>
                             <PostCardSkeleton />
