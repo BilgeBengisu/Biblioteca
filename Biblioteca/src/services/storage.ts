@@ -15,17 +15,12 @@ export async function uploadAvatar(
   const { error: uploadError } = await supabase.storage
     .from(bucket)
     .upload(filePath, file, {
-      cacheControl: "3600",
       upsert: true,
       contentType: file.type || undefined,
     });
 
   if (uploadError) {
-    const isHeic = file.type === "image/heic" || file.type === "image/heif";
-    const hint = isHeic
-      ? " The bucket must allow image/heic (or convert to JPG/PNG)."
-      : "";
-    throw new Error(`${uploadError.message}${hint}`);
+    throw new Error(uploadError.message);
   }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);

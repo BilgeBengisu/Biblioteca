@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const msgArray = [
   "Encuentra tu próxima\nhistoria", 
@@ -16,7 +16,16 @@ const buttonClasses =
 export const Home: React.FC = () => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isActive, setIsActive] = React.useState(true);
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes("error=")) {
+      navigate(`/auth/callback${hash}`, { replace: true });
+    }
+  }, [navigate]);
+
+  // UI effect for displaying messages one by one
   useEffect(() => {
     if (!isActive) return;
 

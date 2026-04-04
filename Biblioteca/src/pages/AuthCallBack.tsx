@@ -33,9 +33,15 @@ export const AuthCallback = () => {
     const { error, errorCode, errorDescription } = parseHashError();
 
     if (error) {
-      setHashError({
-        code: errorCode ?? error,
-        description: errorDescription ?? "Ocurrió un error al confirmar tu cuenta.",
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          navigate("/profile", { replace: true });
+          return;
+        }
+        setHashError({
+          code: errorCode ?? error,
+          description: errorDescription ?? "Ocurrió un error al confirmar tu cuenta.",
+        });
       });
       return;
     }

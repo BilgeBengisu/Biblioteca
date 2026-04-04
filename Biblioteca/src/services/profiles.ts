@@ -105,29 +105,6 @@ export async function updateProfileById(
   return data;
 }
 
-export async function uploadAvatar(
-  bucket: string,
-  userId: string,
-  file: File
-): Promise<{ fullUrl: string; path: string }> {
-  const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-  const filePath = `profile_pictures/${userId}/${crypto.randomUUID()}.${ext}`;
-
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(filePath, file, {
-      upsert: true,
-      cacheControl: "3600",
-      contentType: file.type,
-    });
-
-  if (error) throw new Error(error.message);
-  
-  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-
-  return {fullUrl: data.publicUrl, path: filePath}; // only path to store in the database
-}
-
 export async function getFinishedBooksCount(userId: string, year: number): Promise<number> {
   const start = `${year}-01-01`;
   const end = `${year + 1}-01-01`;
