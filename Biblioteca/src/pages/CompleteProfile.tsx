@@ -90,12 +90,10 @@ export const CompleteProfile = () => {
               username: trimmed,
               avatar_url: user.user_metadata?.avatar_url ?? null,
             });
-            await refreshProfile();
+            refreshProfile();
             navigate("/profile", { replace: true });
-          } catch (err) {
-            const msg =
-              err instanceof Error ? err.message : "No se pudo guardar el nombre de usuario.";
-            setError(msg);
+          } catch {
+            setError("No se pudo guardar el nombre de usuario. Por favor, intentá de nuevo.");
           } finally {
             setLoading(false);
           }

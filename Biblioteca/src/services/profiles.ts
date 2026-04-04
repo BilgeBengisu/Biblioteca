@@ -96,8 +96,7 @@ export async function updateProfileById(
 
   const { data, error } = await supabase
     .from("profiles")
-    .update(updatePayload)
-    .eq("id", userId)
+    .upsert({ id: userId, ...updatePayload }, { onConflict: "id" })
     .select("id, username, bio, avatar_url, created_at, updated_at")
     .single();
 

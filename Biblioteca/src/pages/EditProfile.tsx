@@ -40,8 +40,8 @@ export const EditProfile = () => {
                     currentAvatarUrl={profile.avatar_url}
                     updateProfile={updateProfileById}
                     onCancel={() => navigate(profileRoute)}
-                    onSaved={async () => {
-                        await refreshProfile();
+                    onSaved={() => {
+                        refreshProfile();
                         navigate(profileRoute);
                     }}
                 />
