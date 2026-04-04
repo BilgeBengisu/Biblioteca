@@ -70,7 +70,12 @@ export const Login = () => {
                         setLoading(true);
                         const { error } = await signInWithPassword(email, password);
                         if (error) {
-                            setError(error.message === "Email not confirmed" ? "Confirma tu correo" : error.message);
+                            const msg = error.message === "Email not confirmed"
+                                ? "Confirma tu correo"
+                                : error.message === "Invalid login credentials"
+                                ? "Credenciales incorrectas"
+                                : error.message;
+                            setError(msg);
                             setLoading(false);
                             return;
                         }
