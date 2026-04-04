@@ -99,6 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           username: profile?.username ?? null,
           avatar_url: profile?.avatarUrl ?? null,
