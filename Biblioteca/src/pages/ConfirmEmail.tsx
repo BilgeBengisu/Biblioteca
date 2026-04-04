@@ -1,6 +1,4 @@
 import { useLocation, Link } from "react-router-dom";
-import "./Register.css";
-
 type LocationState = {
   email?: string;
 };
