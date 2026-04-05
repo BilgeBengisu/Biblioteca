@@ -111,7 +111,7 @@ export async function createComment(input: CreateCommentInput): Promise<Comment>
   };
 }
 
-export async function deleteComment(commentId: string, userId?: string): Promise<void> {
+export async function deleteComment(commentId: string, userId?: string): Promise<string[]> {
   // Collect all descendant IDs via BFS so we can delete them before the root,
   // avoiding orphaned rows if the DB has no ON DELETE CASCADE on parent_id.
   const descendantIds: string[] = [];
@@ -140,6 +140,8 @@ export async function deleteComment(commentId: string, userId?: string): Promise
   if (userId) query = query.eq("user_id", userId);
   const { error } = await query;
   if (error) throw error;
+
+  return [...descendantIds, commentId];
 }
 
 export async function likeComment(commentId: string, userId: string) {

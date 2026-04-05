@@ -49,6 +49,7 @@ export const Navbar = () => {
                                         src={profile?.avatar_url || default_avatar}
                                         alt="Profile"
                                         className="navbar-avatar"
+                                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = default_avatar; }} // fall back to default avatar if the image fails to load
                                     />
                                     Perfil
                                 </NavLink>

@@ -41,19 +41,9 @@ export function useComments(postId: string) {
 
   const remove = async (commentId: string, userId?: string) => {
     setError(null);
-    await deleteComment(commentId, userId);
-    setComments((prev) => {
-      const toRemove = new Set<string>();
-      const queue = [commentId];
-      while (queue.length > 0) {
-        const id = queue.pop()!;
-        toRemove.add(id);
-        for (const c of prev) {
-          if (c.parent_id === id) queue.push(c.id);
-        }
-      }
-      return prev.filter((c) => !toRemove.has(c.id));
-    });
+    const deletedIds = await deleteComment(commentId, userId);
+    const toRemove = new Set(deletedIds);
+    setComments((prev) => prev.filter((c) => !toRemove.has(c.id)));
   };
 
   const toggleLike = async (commentId: string, currentlyLiked: boolean, userId?: string) => {
