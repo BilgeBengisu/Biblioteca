@@ -111,37 +111,11 @@ export async function createComment(input: CreateCommentInput): Promise<Comment>
   };
 }
 
-export async function deleteComment(commentId: string, userId?: string): Promise<string[]> {
-  // Collect all descendant IDs via BFS so we can delete them before the root,
-  // avoiding orphaned rows if the DB has no ON DELETE CASCADE on parent_id.
-  const descendantIds: string[] = [];
-  let currentLevel = [commentId];
-
-  while (currentLevel.length > 0) {
-    const { data } = await supabase
-      .from("comments")
-      .select("id")
-      .in("parent_id", currentLevel);
-    if (!data || data.length === 0) break;
-    const nextLevel = (data as { id: string }[]).map((r) => r.id);
-    descendantIds.push(...nextLevel);
-    currentLevel = nextLevel;
-  }
-
-  if (descendantIds.length > 0) {
-    const { error: descError } = await supabase
-      .from("comments")
-      .delete()
-      .in("id", descendantIds);
-    if (descError) throw descError;
-  }
-
+export async function deleteComment(commentId: string, userId?: string): Promise<void> {
   let query = supabase.from("comments").delete().eq("id", commentId);
   if (userId) query = query.eq("user_id", userId);
   const { error } = await query;
   if (error) throw error;
-
-  return [...descendantIds, commentId];
 }
 
 export async function likeComment(commentId: string, userId: string) {

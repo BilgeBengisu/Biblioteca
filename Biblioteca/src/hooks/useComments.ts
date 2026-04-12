@@ -41,9 +41,8 @@ export function useComments(postId: string) {
 
   const remove = async (commentId: string, userId?: string) => {
     setError(null);
-    const deletedIds = await deleteComment(commentId, userId);
-    const toRemove = new Set(deletedIds);
-    setComments((prev) => prev.filter((c) => !toRemove.has(c.id)));
+    await deleteComment(commentId, userId);
+    await refresh();
   };
 
   const toggleLike = async (commentId: string, currentlyLiked: boolean, userId?: string) => {
