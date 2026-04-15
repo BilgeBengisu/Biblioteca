@@ -228,17 +228,28 @@ export const BookView = () => {
             <div>
                 {selectedSection === "descripcion" && (
                 <section className="mt-6">
-                    <p className="text-gray-800 leading-relaxed">{book?.description||
-                        `Información del libro próximamente.`}</p>
+                    {book?.description ? (
+                        <p className="text-neutral-700 text-base leading-loose mx-4 my-2">{book.description}</p>
+                    ) : (
+                        <p className="text-center text-sm text-neutral-400 italic py-8">
+                            Información del libro próximamente.
+                        </p>
+                    )}
                 </section>
                 )}
 
                 {selectedSection === "author" && (
                 <section className="mt-6">
-                    <p className="text-gray-800 leading-relaxed">
-                    {book?.authorBio ||
-                        `Información del autor ${book?.author} próximamente.`}
-                    </p>
+                    {book?.authorBio ? (
+                        <div className="space-y-3 mx-4 my-2">
+                            <h3 className="font-semibold text-neutral-900">{book?.author}</h3>
+                            <p className="text-neutral-700 text-base leading-loose">{book.authorBio}</p>
+                        </div>
+                    ) : (
+                        <p className="text-center text-sm text-neutral-400 italic py-8">
+                            Información del autor {book?.author} próximamente.
+                        </p>
+                    )}
                 </section>
                 )}
 
