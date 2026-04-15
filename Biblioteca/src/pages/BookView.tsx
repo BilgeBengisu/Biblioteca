@@ -228,7 +228,8 @@ export const BookView = () => {
             <div>
                 {selectedSection === "descripcion" && (
                 <section className="mt-6">
-                    <p className="text-gray-800 leading-relaxed">{book?.description}</p>
+                    <p className="text-gray-800 leading-relaxed">{book?.description||
+                        `Información del libro próximamente.`}</p>
                 </section>
                 )}
 
