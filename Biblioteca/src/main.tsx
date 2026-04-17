@@ -10,7 +10,7 @@ const queryClient = new QueryClient();
 
 
 import { ApolloProvider } from '@apollo/client/react';
-import { apolloClient } from './contexts/ApolloClient.tsx';
+import { apolloClient } from './apollo-client';
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

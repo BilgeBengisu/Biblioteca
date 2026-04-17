@@ -1,6 +1,6 @@
 // provides services for the Search page for book and user lookup
 import { supabase } from "../supabase-client";
-import { apolloClient } from "../contexts/ApolloClient";
+import { apolloClient } from "../apollo-client";
 import { SEARCH_BOOKS } from "../queries/queries";
 import type { BookResult, HardcoverBookDocument, SearchBooksVariables, SearchResponse, UserResult } from "../types/Search";
 

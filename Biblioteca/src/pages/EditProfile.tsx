@@ -40,9 +40,9 @@ export const EditProfile = () => {
                     currentAvatarUrl={profile.avatar_url}
                     updateProfile={updateProfileById}
                     onCancel={() => navigate(profileRoute)}
-                    onSaved={() => {
+                    onSaved={(updated) => {
                         refreshProfile();
-                        navigate(profileRoute);
+                        navigate(`/profile/${updated.username}`);
                     }}
                 />
             </div>
