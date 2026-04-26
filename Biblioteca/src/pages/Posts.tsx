@@ -1,66 +1,25 @@
-import { getPosts } from "../services/posts";
+import { useState } from "react";
 import type { Post } from "../types/Post";
-import { useEffect, useState } from "react";
 import { NewPostForm } from "../components/NewPostForm";
 import { PostCard } from "../components/Postcard";
 import { useAuth } from "../contexts/AuthContext";
 import { PostCardSkeleton } from "../components/PostCardSkeleton";
 import { useToggleLike } from "../hooks/useToggleLike";
 import { PostsFilterTabs } from "../components/PostsFilterTabs";
+import { useFeedPosts } from "../hooks/useFeedPosts";
 
 export const Posts = () => {
     const { user } = useAuth();
-    const [posts, setPosts] = useState<Post[]>([]);
-
-    // loading and error states for more responsive UI
-    const [error, setError] = useState<string | null>(null);
-    const [loadingPosts, setLoadingPosts] = useState<boolean>(true);
-
     const [filter, setFilter] = useState<"all" | "following">("all");
+    const { posts, setPosts, loading, error } = useFeedPosts(filter, user?.id);
 
-
-    // handler to add newly created post to the posts list
-    // this updates the ui without refetching all posts
     const handlePostCreated = (post: Post) => {
-        setPosts((prev) => [post, ...prev]); // prepend new post to top
-        // prev helps calling the function with the latest state
-        // this way we don't lose any post if states update quickly
+        setPosts((prev) => [post, ...prev]);
     };
 
-     // handler to update the UI after a post is deleted
     const handlePostDeleted = (deletedPostId: string) => {
         setPosts(prev => prev.filter(post => post.id !== deletedPostId));
     };
-
-    // getting posts from the service to display
-    useEffect(() => {
-        let cancelled = false;
-
-        setLoadingPosts(true);
-        setError(null);
-
-        getPosts({
-            feed: filter,        // "all" | "following"
-            viewerId: user?.id,  // needed for following feed (also used for "include me")
-        })
-            .then((data) => {
-            if (cancelled) return;
-            setPosts(data);
-            })
-            .catch((err) => {
-            console.error(err);
-            if (cancelled) return;
-            setError("No se pudieron cargar las publicaciones");
-            })
-            .finally(() => {
-            if (cancelled) return;
-            setLoadingPosts(false);
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [filter, user?.id]);
 
     const handleToggleLike = useToggleLike({ userId: user?.id, setPosts });
 
@@ -80,7 +39,7 @@ export const Posts = () => {
                 onChange={setFilter}
                 userLoggedIn={!!user}
             />
-            {loadingPosts && ( // show skeleton while loading posts
+            {loading && (
                 <>
                 <PostCardSkeleton />
                 <PostCardSkeleton />
@@ -88,13 +47,13 @@ export const Posts = () => {
                 </>
             )}
             {posts.map((post) => (
-                <PostCard 
-                key={post.id} 
-                post={post} 
+                <PostCard
+                key={post.id}
+                post={post}
                 onDelete={handlePostDeleted}
-                onToggleLike={handleToggleLike}/> // the callback to update UI on deletion
+                onToggleLike={handleToggleLike}/>
             ))}
-            {posts.length === 0 && !loadingPosts &&
+            {posts.length === 0 && !loading &&
                 <p className="text-center text-sm text-gray-500">
                     No hay publicaciones todavía.
                 </p>

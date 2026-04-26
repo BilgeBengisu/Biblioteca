@@ -1,35 +1,13 @@
-import { useEffect, useState } from "react";
-import { getFollowCounts } from "../services/follows";
+import { useFollowCounts } from "../hooks/useFollowCounts";
 
 type FollowCountsProps = {
   profileId: string;
-  refreshKey?: number; 
+  refreshKey?: number;
   className?: string;
 };
 
 export function FollowCounts({ profileId, refreshKey = 0, className }: FollowCountsProps) {
-  const [counts, setCounts] = useState<{ followers: number; following: number } | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    setErrorMsg(null);
-
-    (async () => {
-      try {
-        const c = await getFollowCounts(profileId);
-        if (!alive) return;
-        setCounts(c);
-      } catch (e) {
-        if (!alive) return;
-        setErrorMsg("No se pudieron cargar seguidores.");
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [profileId, refreshKey]);
+  const { counts, error } = useFollowCounts(profileId, refreshKey);
 
   return (
     <div className={className}>
@@ -52,7 +30,7 @@ export function FollowCounts({ profileId, refreshKey = 0, className }: FollowCou
         </span>
       </div>
 
-      {errorMsg && <p className="mt-1 text-xs text-red-600">{errorMsg}</p>}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }

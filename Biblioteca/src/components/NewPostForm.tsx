@@ -1,23 +1,21 @@
 import { useState } from "react";
 import type { Post } from "../types/Post";
-import { createPost } from "../services/posts";
 import { BookSearchInput, type SearchBook } from "./BookSearchInput";
-import { upsertUserBook } from "../services/userBooks";
 import { Pencil, BookMarked, Star, BookOpen, Bookmark, CheckCheck } from "lucide-react";
+import { useCreatePost } from "../hooks/useCreatePost";
 
 type NewPostFormProps = {
-  onPostCreated: (post: Post) => void; // callback to add the new post to feed
+  onPostCreated: (post: Post) => void;
 };
 
-// post reference uses a user-book relationship
 export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
   const [type, setType] = useState<"text" | "status" | "review">("text");
   const [content, setContent] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedBook, setSelectedBook] = useState<SearchBook | null>(null);
   const [status, setStatus] = useState<"want_to_read" | "reading" | "finished">("reading");
-  const [error, setError] = useState<string | null>(null);
   const [rating, setRating] = useState<number>(0);
+
+  const { submit, isSubmitting, error, setError } = useCreatePost();
 
   const trimmed = content.trim();
 
@@ -25,83 +23,37 @@ export const NewPostForm = ({ onPostCreated }: NewPostFormProps) => {
     e.preventDefault();
     setError(null);
 
-    // text posts must have content
     if (type === "text" && !trimmed) {
       setError("Escribe algo para publicar.");
       return;
     }
-
-    // status/review must have book association
     if ((type === "status" || type === "review") && !selectedBook) {
       setError("Selecciona un libro.");
       return;
     }
-
-    // status is required for status posts
     if (type === "status" && !status) {
       setError("Selecciona un estado.");
       return;
     }
-
-    // rating or text content is required for review posts
     if (type === "review" && !trimmed && rating <= 0) {
       setError("Escribe una reseña o asigna una calificación.");
       return;
     }
 
-    setIsSubmitting(true);
-    // upserting user-book relationship if needed
-    try {
-      let userBookIdForPost: string | null = null;
-
-      // ensure userBookId is set for status/review posts
-      if (type === "status" && selectedBook) {
-        const userBook = await upsertUserBook({ book: selectedBook, status });
-        userBookIdForPost = userBook.id;
-      }
-
-      if (type === "review" && selectedBook) {
-        const userBook = await upsertUserBook({
-          book: selectedBook,
-          status: "finished",                // reviews imply finished
-          rating: rating > 0 ? rating : null // current rating snapshot
-        });
-        userBookIdForPost = userBook.id;
-      }
-
-      if ((type === "status" || type === "review") && !userBookIdForPost) {
-        setError("No se pudo asociar el libro. Intenta de nuevo.");
-        return;
-      }
-
-      const newPost = await createPost({
-        type,
-        content: type === "text" ? trimmed : (trimmed || ""),
-        userBookId: type === "text" ? null : userBookIdForPost!,
-        ...(type === "status" ? { status } : {}),
-        ...(type === "review" ? { rating: rating > 0 ? rating : null } : {}), // keep rating on post database too as a snapshot
-      } as any);
-
-      onPostCreated(newPost); // callback to add post to feed only after successful creation
-
-      // reset
+    const newPost = await submit({ type, content, selectedBook, status, rating });
+    if (newPost) {
+      onPostCreated(newPost);
       setContent("");
       setSelectedBook(null);
       setRating(0);
       setType("text");
-    } catch (err) {
-      console.error("Error creating post:", err);
-      setError("No se pudo publicar. Intenta de nuevo.");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-
   const isValid =
-      (type === "text" && trimmed.length > 0) ||
-      (type === "status" && !!selectedBook) ||
-      (type === "review" && !!selectedBook && (trimmed.length > 0 || rating > 0));
+    (type === "text" && trimmed.length > 0) ||
+    (type === "status" && !!selectedBook) ||
+    (type === "review" && !!selectedBook && (trimmed.length > 0 || rating > 0));
 
   const postTypes = [
     { label: "Escribir algo", value: "text", icon: <Pencil size={14} /> },

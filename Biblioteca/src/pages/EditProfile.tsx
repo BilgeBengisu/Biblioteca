@@ -2,12 +2,13 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { EditProfileForm } from "../components/EditProfileForm";
-import { updateProfileById } from "../services/profiles";
+import { useEditProfile } from "../hooks/useEditProfile";
 
 
 export const EditProfile = () => {
     const { user, profile, refreshProfile, loading } = useAuth();
     const navigate = useNavigate();
+    const { updateProfile } = useEditProfile();
 
     useEffect(() => {
         if (!loading && !user) {
@@ -38,7 +39,7 @@ export const EditProfile = () => {
                     userId={user.id}
                     avatarBucket="avatars"
                     currentAvatarUrl={profile.avatar_url}
-                    updateProfile={updateProfileById}
+                    updateProfile={updateProfile}
                     onCancel={() => navigate(profileRoute)}
                     onSaved={(updated) => {
                         refreshProfile();

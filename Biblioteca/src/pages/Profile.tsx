@@ -37,6 +37,7 @@ export const Profile = () => {
     } = useReadingGoal(profile?.id, currentYear);
     const [followRefreshKey, setFollowRefreshKey] = useState(0); // to refresh the follower count
     const [activeTab, setActiveTab] = useState<"library" | "posts">("library");
+    
     /**
      * posts: the posts made by the user whose profile is being viewed
      * postsLoading: true if the posts are being loaded, false otherwise

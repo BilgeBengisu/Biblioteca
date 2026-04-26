@@ -2,14 +2,13 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { BooksData } from "../types/Book";
 import { useQuery } from "@apollo/client/react";
 import { GET_BOOK_BY_SLUG } from "../queries/queries";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { StarRating } from "../components/StarRating";
 import { PostCard } from "../components/Postcard";
 import { PostCardSkeleton } from "../components/PostCardSkeleton";
-import type { Post } from "../types/Post";
-import { getPostsByBook } from "../services/posts";
 import { useAuth } from "../contexts/AuthContext";
 import { useToggleLike } from "../hooks/useToggleLike";
+import { usePostsByBook } from "../hooks/usePostsByBook";
 import { BookStatusSelect } from "../components/BookStatusSelect";
 
 export const BookView = () => {
@@ -30,11 +29,6 @@ export const BookView = () => {
         "descripcion" | "author" | "posts"
     >("descripcion");
 
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [postsLoading, setPostsLoading] = useState<boolean>(false);
-    const [postsError, setPostsError] = useState<string | null>(null);
-    const [postsLoaded, setPostsLoaded] = useState<boolean>(false);
-
     const bookData = data?.books?.[0];
 
     // Transform API book data to match component expectations
@@ -54,48 +48,12 @@ export const BookView = () => {
         const parsed = rawBookId ? Number(rawBookId) : NaN;
         return Number.isFinite(parsed) ? parsed : null;
     }, [bookData?.id]);
-    
-    useEffect(() => {
-        setPosts([]);
-        setPostsError(null);
-        setPostsLoaded(false);
-    }, [bookData?.id]);
 
-    useEffect(() => {
-        if (selectedSection !== "posts" || postsLoaded) return;
-        if (!bookId) return;
-
-        if (!Number.isFinite(bookId)) {
-            setPostsError("No se pudieron cargar las reseñas.");
-            setPostsLoaded(true);
-            return;
-        }
-
-        let cancelled = false;
-        setPostsLoading(true);
-        setPostsError(null);
-
-        getPostsByBook({ bookId, viewerId: user?.id })
-            .then((posts) => {
-                if (cancelled) return;
-                setPosts(posts);
-            })
-            .catch((err) => {
-                console.error(err);
-                if (cancelled) return;
-                setPostsError("No se pudieron cargar las reseñas.");
-            })
-            .finally(() => {
-                if (cancelled) return;
-                setPostsLoading(false);
-                setPostsLoaded(true);
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [selectedSection, postsLoaded, bookId, user?.id]);
-
+    const { posts, setPosts, loading: postsLoading, error: postsError } = usePostsByBook(
+        bookId,
+        user?.id,
+        selectedSection === "posts"
+    );
 
     const handlePostDeleted = (deletedPostId: string) => {
         setPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
